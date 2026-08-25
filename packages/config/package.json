@@ -1,0 +1,8 @@
+{
+  "name": "@financial-os/config",
+  "version": "0.1.0",
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
