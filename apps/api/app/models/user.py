@@ -1,9 +1,27 @@
-from sqlalchemy import Column, String, DateTime, func
+import uuid
+from sqlalchemy import Column, String, Boolean, DateTime, func
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 class UserModel(Base):
     __tablename__ = "users"
 
-    id = Column(String, primary_key=True, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=True)
+    avatar_url = Column(String(500), nullable=True)
+    currency = Column(String(10), default="PHP", nullable=False)
+    timezone = Column(String(50), default="Asia/Manila", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    is_onboarded = Column(Boolean, default=False, nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    money_sources = relationship("MoneySourceModel", back_populates="user", cascade="all, delete-orphan")
+    categories = relationship("CategoryModel", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshTokenModel", back_populates="user", cascade="all, delete-orphan")

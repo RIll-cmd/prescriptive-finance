@@ -10,7 +10,7 @@ interface AnimatedCardProps {
 }
 
 export const AnimatedCard: React.FC<AnimatedCardProps> = ({
-  cardNumber = '4218 8760 1276 1208',
+  cardNumber = '4218 •••• •••• 1208',
   cardHolder = 'ALYA GARRISON',
   expiry = '09/28',
   className = '',
@@ -18,6 +18,7 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
   const sceneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
 
   // Physics state stored in refs to avoid React re-render overhead in the 60/120fps animation loop
   const stateRef = useRef({
@@ -25,41 +26,50 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
     target: { rx: 0, ry: 0, gx: 50, gy: 50 },
     hovering: false,
     smoothing: 0.08,
+    glowOpacity: 0.35,
   });
 
-  const lerp = (current: number, target: number, factor: number) => {
-    return current + (target - current) * factor;
-  };
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
   useEffect(() => {
     let animationFrameId: number;
 
     const loop = () => {
-      const { current, target, hovering, smoothing } = stateRef.current;
-      const s = hovering ? smoothing : 0.05;
+      const s = stateRef.current;
+      const sm = s.hovering ? s.smoothing : 0.05;
 
-      current.rx = lerp(current.rx, target.rx, s);
-      current.ry = lerp(current.ry, target.ry, s);
-      current.gx = lerp(current.gx, target.gx, s * 1.5);
-      current.gy = lerp(current.gy, target.gy, s * 1.5);
+      s.current.rx = lerp(s.current.rx, s.target.rx, sm);
+      s.current.ry = lerp(s.current.ry, s.target.ry, sm);
+      s.current.gx = lerp(s.current.gx, s.target.gx, sm * 1.5);
+      s.current.gy = lerp(s.current.gy, s.target.gy, sm * 1.5);
+
+      // Smooth glow intensity transition
+      const targetGlow = s.hovering ? 0.7 : 0.35;
+      s.glowOpacity = lerp(s.glowOpacity, targetGlow, 0.04);
 
       if (cardRef.current) {
-        cardRef.current.style.transform = `rotateX(${current.rx.toFixed(2)}deg) rotateY(${current.ry.toFixed(2)}deg)`;
+        cardRef.current.style.transform = `rotateX(${s.current.rx.toFixed(2)}deg) rotateY(${s.current.ry.toFixed(2)}deg)`;
 
-        const shadowX = -current.ry * 0.8;
-        const shadowY = current.rx * 0.5 + 12;
-        const shadowSpread = hovering ? 50 : 30;
+        const shadowX = -s.current.ry * 0.8;
+        const shadowY = s.current.rx * 0.5 + 12;
+        const spread = s.hovering ? 55 : 30;
 
+        // Dual-tone shadow: purple ambient + blue directional
         cardRef.current.style.boxShadow = `
-          ${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px ${shadowSpread}px rgba(0, 0, 0, 0.45),
-          ${(shadowX * 0.3).toFixed(1)}px ${(shadowY * 0.5).toFixed(1)}px 15px rgba(197, 124, 249, ${hovering ? 0.12 : 0}),
-          0 0 0 1px rgba(255, 255, 255, 0.07) inset
+          ${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px ${spread}px rgba(0, 0, 0, 0.45),
+          ${(shadowX * 0.3).toFixed(1)}px ${(shadowY * 0.5).toFixed(1)}px 18px rgba(168, 85, 247, ${s.hovering ? 0.14 : 0.04}),
+          ${(shadowX * 0.2).toFixed(1)}px ${(shadowY * 0.3).toFixed(1)}px 25px rgba(59, 130, 246, ${s.hovering ? 0.08 : 0}),
+          0 0 0 1px rgba(255, 255, 255, ${s.hovering ? 0.1 : 0.06}) inset
         `;
       }
 
       if (glareRef.current) {
-        glareRef.current.style.setProperty('--glare-x', `${current.gx.toFixed(1)}%`);
-        glareRef.current.style.setProperty('--glare-y', `${current.gy.toFixed(1)}%`);
+        glareRef.current.style.setProperty('--glare-x', `${s.current.gx.toFixed(1)}%`);
+        glareRef.current.style.setProperty('--glare-y', `${s.current.gy.toFixed(1)}%`);
+      }
+
+      if (glowRef.current) {
+        glowRef.current.style.opacity = `${s.glowOpacity.toFixed(3)}`;
       }
 
       animationFrameId = requestAnimationFrame(loop);
@@ -93,7 +103,7 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
     stateRef.current.target.gy = 50;
   }, []);
 
-  const numberGroups = cardNumber.split(' ');
+  const numberGroups = cardNumber.split(/\s+/);
 
   return (
     <div
@@ -103,17 +113,23 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Ambient outer glow — pulses gently, intensifies on hover */}
+      <div ref={glowRef} className="card-outer-glow" />
+
       <div ref={cardRef} className="stripe-card" id="stripeCard">
-        {/* Animated mesh gradient background */}
+        {/* Fluid animated mesh gradient background */}
         <div className="card-mesh-gradient">
           <div className="mesh-blob blob-a" />
           <div className="mesh-blob blob-b" />
           <div className="mesh-blob blob-c" />
           <div className="mesh-blob blob-d" />
           <div className="mesh-blob blob-e" />
+          <div className="mesh-blob blob-f" />
+          {/* Holographic light streak */}
+          <div className="card-light-streak" />
         </div>
 
-        {/* Surface glare overlay */}
+        {/* Surface glare overlay (follows cursor) */}
         <div ref={glareRef} className="card-glare" id="cardGlare" />
 
         {/* Specular edge highlight */}
@@ -123,21 +139,30 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
         <div className="card-face relative z-[6] p-[20px_22px] h-full flex flex-col justify-between select-none">
           {/* Top Row: Chip & Contactless */}
           <div className="flex items-center justify-between">
+            {/* Premium metallic chip with gradient fill */}
             <div className="chip-container w-[42px] h-[32px]">
-              <svg className="chip-svg w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]" viewBox="0 0 50 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="1" y="1" width="48" height="38" rx="5" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" fill="rgba(255, 215, 100, 0.15)"/>
-                <rect x="1" y="15" width="48" height="1" fill="rgba(255, 215, 100, 0.2)"/>
-                <rect x="1" y="24" width="48" height="1" fill="rgba(255, 215, 100, 0.2)"/>
-                <rect x="17" y="1" width="1" height="38" fill="rgba(255, 215, 100, 0.15)"/>
-                <rect x="33" y="1" width="1" height="38" fill="rgba(255, 215, 100, 0.15)"/>
+              <svg className="chip-svg w-full h-full drop-shadow-[0_1px_3px_rgba(0,0,0,0.25)]" viewBox="0 0 50 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="chipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(255, 225, 140, 0.35)" />
+                    <stop offset="50%" stopColor="rgba(255, 210, 110, 0.2)" />
+                    <stop offset="100%" stopColor="rgba(255, 235, 160, 0.3)" />
+                  </linearGradient>
+                </defs>
+                <rect x="1" y="1" width="48" height="38" rx="6" stroke="rgba(255,220,160,0.35)" strokeWidth="0.8" fill="url(#chipGrad)" />
+                <rect x="1" y="15.5" width="48" height="0.7" fill="rgba(255,220,140,0.25)" />
+                <rect x="1" y="24" width="48" height="0.7" fill="rgba(255,220,140,0.25)" />
+                <rect x="17" y="1" width="0.7" height="38" fill="rgba(255,220,140,0.2)" />
+                <rect x="33" y="1" width="0.7" height="38" fill="rgba(255,220,140,0.2)" />
+                <rect x="18" y="16.2" width="14" height="7.5" rx="1.5" fill="rgba(255,230,170,0.1)" stroke="rgba(255,220,160,0.12)" strokeWidth="0.5" />
               </svg>
             </div>
 
             <div className="contactless-icon rotate-90">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round">
-                <path d="M7.5 18.5c2.5-2.5 2.5-8 0-11" opacity="0.5"/>
-                <path d="M11 18.5c2.5-2.5 2.5-8 0-11" opacity="0.7"/>
-                <path d="M14.5 18.5c2.5-2.5 2.5-8 0-11"/>
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M7.5 18.5c2.5-2.5 2.5-8 0-11" opacity="0.45" />
+                <path d="M11 18.5c2.5-2.5 2.5-8 0-11" opacity="0.65" />
+                <path d="M14.5 18.5c2.5-2.5 2.5-8 0-11" />
               </svg>
             </div>
           </div>
@@ -147,7 +172,7 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
             {numberGroups.map((group, idx) => (
               <span
                 key={idx}
-                className="card-num-group text-[0.92rem] font-semibold text-white/90 tracking-[0.16em] tabular-nums drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
+                className="card-num-group text-[0.92rem] font-semibold text-white/90 tracking-[0.16em] tabular-nums drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]"
               >
                 {group}
               </span>

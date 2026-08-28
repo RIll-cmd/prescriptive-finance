@@ -1,9 +1,4 @@
-from sqlalchemy import Column, String, DateTime, func
-from app.core.database import Base
+from app.models.money_source import MoneySourceModel
 
-class AccountModel(Base):
-    __tablename__ = "accounts"
-
-    id = Column(String, primary_key=True, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+# Alias AccountModel to MoneySourceModel for backwards compatibility across modules
+AccountModel = MoneySourceModel

@@ -1,15 +1,23 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ParticleBackground } from '@/components/ui/ParticleBackground';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
+import { useAuthStore } from '@/stores/auth-store';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, isAuthenticated, checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   return (
     <div className="relative min-h-screen bg-black text-white flex">
       {/* Dynamic Background Particle & Mesh Canvas */}
@@ -23,6 +31,9 @@ export default function DashboardLayout({
         <Header />
         <main>{children}</main>
       </div>
+
+      {/* Onboarding Wizard for new accounts */}
+      {user && !user.is_onboarded && <OnboardingModal />}
     </div>
   );
 }

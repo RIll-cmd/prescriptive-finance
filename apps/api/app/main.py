@@ -1,17 +1,26 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.core.database import init_db
 from app.api.routes import (
-    auth, users, accounts, transactions, categories, goals,
+    auth, users, accounts, money_sources, transactions, categories, goals,
     bills, debts, financial_health, safe_to_spend, simulator,
     insights, autopilot, ai, security
 )
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database tables on startup
+    await init_db()
+    yield
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 if settings.BACKEND_CORS_ORIGINS:
@@ -26,6 +35,7 @@ if settings.BACKEND_CORS_ORIGINS:
 # Include Routers
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
+app.include_router(money_sources.router, prefix=f"{settings.API_V1_STR}/money-sources", tags=["money-sources"])
 app.include_router(accounts.router, prefix=f"{settings.API_V1_STR}/accounts", tags=["accounts"])
 app.include_router(transactions.router, prefix=f"{settings.API_V1_STR}/transactions", tags=["transactions"])
 app.include_router(categories.router, prefix=f"{settings.API_V1_STR}/categories", tags=["categories"])

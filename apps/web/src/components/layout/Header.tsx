@@ -1,14 +1,27 @@
 'use client';
 
 import React from 'react';
+import { useAuthStore } from '@/stores/auth-store';
 
 export const Header: React.FC = () => {
+  const { user } = useAuthStore();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
     <header className="flex items-center justify-between mb-7 h-[50px] animate-[fadeDown_0.6s_cubic-bezier(0.16,1,0.3,1)_both]">
       <div className="flex items-center">
-        <h1 className="text-[1.6rem] font-extrabold tracking-[-0.03em] flex items-center gap-2">
+        <h1 className="text-[1.5rem] font-extrabold tracking-[-0.03em] flex items-center gap-2">
+          <span className="text-white/40 font-medium text-[1.1rem] hidden sm:inline">
+            {getGreeting()},
+          </span>
           <span className="bg-gradient-to-br from-[#3869D2] to-[#C57CF9] bg-clip-text text-transparent">
-            Dashboard
+            {user?.first_name || 'Dashboard'}
           </span>
           <span className="text-[1rem] bg-gradient-to-br from-[#3869D2] to-[#C57CF9] bg-clip-text text-transparent inline-block animate-[sparkleRotate_4s_ease-in-out_infinite]">
             ✦

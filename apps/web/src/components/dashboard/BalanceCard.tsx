@@ -2,13 +2,21 @@
 
 import React, { useEffect, useState } from 'react';
 import { AnimatedCard } from '../ui/AnimatedCard';
+import { useAuthStore } from '@/stores/auth-store';
 
 export const BalanceCard: React.FC = () => {
+  const { user, totalBalance } = useAuthStore();
   const [balance, setBalance] = useState<number>(0);
-  const target = 18987.19;
+
+  // Target amount: use real total liquid balance if user has sources, else default 18,987.19
+  const target = totalBalance > 0 ? totalBalance : 18987.19;
+  const currencySymbol = user?.currency === 'PHP' ? '₱' : '$';
+  const cardHolderName = user?.first_name
+    ? `${user.first_name} ${user.last_name || ''}`.trim().toUpperCase()
+    : 'ALYA GARRISON';
 
   useEffect(() => {
-    const dur = 2000;
+    const dur = 1800;
     const start = performance.now();
 
     const tick = (now: number) => {
@@ -20,7 +28,7 @@ export const BalanceCard: React.FC = () => {
 
     const frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [target]);
 
   return (
     <section className="glass-card balance-card">
@@ -28,7 +36,7 @@ export const BalanceCard: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-[18px]">
           <h2 className="text-[0.95rem] font-semibold text-white/70 tracking-[-0.01em]">
-            Balance
+            Total Balance
           </h2>
           <button
             aria-label="Add balance"
@@ -40,7 +48,7 @@ export const BalanceCard: React.FC = () => {
 
         {/* Balance Amount */}
         <div className="mb-5">
-          <span className="text-[1.2rem] font-medium text-white/50 align-super mr-0.5">$</span>
+          <span className="text-[1.2rem] font-medium text-white/50 align-super mr-0.5">{currencySymbol}</span>
           <span className="text-[2.2rem] font-black tracking-[-0.04em] bg-gradient-to-br from-[#3869D2] to-[#C57CF9] bg-clip-text text-transparent tabular-nums balance-amount-glow inline-block">
             {balance.toLocaleString('en-US', {
               minimumFractionDigits: 2,
@@ -51,16 +59,18 @@ export const BalanceCard: React.FC = () => {
 
         {/* 3D Animated Card */}
         <AnimatedCard
-          cardNumber="4218 8760 1276 1208"
-          cardHolder="ALYA GARRISON"
+          cardNumber="4218 •••• •••• 1208"
+          cardHolder={cardHolderName}
           expiry="09/28"
         />
 
         {/* Bottom Row */}
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-baseline">
-            <span className="text-[0.9rem] font-medium text-white/50 mr-0.5">$</span>
-            <span className="text-[1.5rem] font-bold text-white tabular-nums">1,209</span>
+            <span className="text-[0.9rem] font-medium text-white/50 mr-0.5">{currencySymbol}</span>
+            <span className="text-[1.5rem] font-bold text-white tabular-nums">
+              {totalBalance > 0 ? (totalBalance * 0.12).toFixed(0) : '1,209'}
+            </span>
           </div>
 
           <button
