@@ -26,3 +26,5 @@ class UserModel(Base):
     categories = relationship("CategoryModel", back_populates="user", cascade="all, delete-orphan")
     transactions = relationship("TransactionModel", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshTokenModel", back_populates="user", cascade="all, delete-orphan")
+    health_snapshots = relationship("HealthSnapshotModel", back_populates="user", cascade="all, delete-orphan")
+    insights = relationship("InsightModel", back_populates="user", cascade="all, delete-orphan")

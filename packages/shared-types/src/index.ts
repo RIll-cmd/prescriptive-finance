@@ -175,3 +175,196 @@ export interface AuthResponse {
   token_type: string;
   user: User;
 }
+
+// =========================================================
+// Phase 3: Financial Intelligence Types
+// =========================================================
+
+export interface TrendDelta {
+  current: number;
+  previous: number;
+  absolute_change: number;
+  percentage_change?: number | null;
+  direction: 'UP' | 'DOWN' | 'FLAT';
+  summary: string;
+}
+
+export interface WeeklyCashFlowItem {
+  week_number: number;
+  label: string;
+  start_date: string;
+  end_date: string;
+  income: number;
+  expenses: number;
+  net_flow: number;
+}
+
+export interface DailyCashFlowItem {
+  date: string;
+  income: number;
+  expenses: number;
+  net_flow: number;
+  transaction_count: number;
+}
+
+export interface CashFlowStabilityInfo {
+  score: number;
+  classification: 'VERY_STABLE' | 'STABLE' | 'VARIABLE' | 'UNSTABLE' | 'HIGHLY_UNSTABLE';
+  coefficient_of_variation: number;
+  description: string;
+}
+
+export interface CashFlowIntelligenceResponse {
+  period_start: string;
+  period_end: string;
+  previous_start: string;
+  previous_end: string;
+  current_income: number;
+  current_expenses: number;
+  current_net_flow: number;
+  income_trend: TrendDelta;
+  expense_trend: TrendDelta;
+  net_flow_trend: TrendDelta;
+  stability: CashFlowStabilityInfo;
+  weekly_breakdown: WeeklyCashFlowItem[];
+  daily_breakdown: DailyCashFlowItem[];
+  income_transaction_count: number;
+  expense_transaction_count: number;
+}
+
+export interface CategorySpendingDetail {
+  category_id?: string | null;
+  category_name: string;
+  icon: string;
+  color_hex: string;
+  is_discretionary: boolean;
+  current_amount: number;
+  previous_amount: number;
+  percentage_of_total: number;
+  absolute_change: number;
+  percentage_change?: number | null;
+  direction: 'UP' | 'DOWN' | 'FLAT';
+  is_significant_change: boolean;
+  transaction_count: number;
+}
+
+export interface DiscretionarySplit {
+  essential_amount: number;
+  discretionary_amount: number;
+  uncategorized_amount: number;
+  total_expenses: number;
+  discretionary_ratio_pct: number;
+  essential_ratio_pct: number;
+  summary: string;
+}
+
+export interface SpendingVelocity {
+  calendar_day_average: number;
+  active_day_average: number;
+  active_days_count: number;
+  total_days_count: number;
+  weekly_average: number;
+  historical_monthly_average: number;
+  baseline_variance_pct?: number | null;
+}
+
+export interface SpendingIntelligenceResponse {
+  period_start: string;
+  period_end: string;
+  total_expenses: number;
+  categories: CategorySpendingDetail[];
+  discretionary: DiscretionarySplit;
+  velocity: SpendingVelocity;
+  significant_changes: CategorySpendingDetail[];
+}
+
+export interface FinancialMetricsResponse {
+  period_start: string;
+  period_end: string;
+  net_cash_flow: number;
+  savings_rate_pct: number;
+  expense_ratio_pct: number;
+  discretionary_ratio_pct: number;
+  liquidity_coverage_months: number;
+  tracked_total_balance: number;
+  average_monthly_expenses: number;
+  cash_flow_stability_score: number;
+}
+
+export interface HealthScoreComponents {
+  cash_flow: number;
+  savings: number;
+  spending: number;
+  liquidity: number;
+  debt?: number | null;
+}
+
+export interface HealthScoreWeights {
+  cash_flow: number;
+  savings: number;
+  spending: number;
+  liquidity: number;
+  debt: number;
+}
+
+export interface HealthScoreExplanation {
+  summary: string;
+  positive_factors: string[];
+  negative_factors: string[];
+  changes: string[];
+  suggestions: string[];
+  component_rationales: Record<string, string>;
+}
+
+export interface HealthScoreResponse {
+  score: number;
+  label: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'NEEDS_ATTENTION' | 'CRITICAL';
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  confidence_reason: string;
+  history_days: number;
+  components: HealthScoreComponents;
+  weights: HealthScoreWeights;
+  metrics: FinancialMetricsResponse;
+  explanation: HealthScoreExplanation;
+  evaluated_at: string;
+}
+
+export interface HealthHistoryPoint {
+  snapshot_date: string;
+  score: number;
+  label: string;
+  cash_flow_score?: number | null;
+  savings_score?: number | null;
+  spending_score?: number | null;
+  liquidity_score?: number | null;
+  debt_score?: number | null;
+}
+
+export interface HealthHistoryResponse {
+  items: HealthHistoryPoint[];
+  current_score: number;
+  average_score: number;
+  score_change: number;
+}
+
+export interface FinancialInsightItem {
+  id: string;
+  type: string;
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
+  title: string;
+  description: string;
+  metric?: string | null;
+  current_value?: number | null;
+  previous_value?: number | null;
+  percentage_change?: number | null;
+  is_dismissed: boolean;
+  created_at: string;
+}
+
+export interface FinancialInsightsResponse {
+  insights: FinancialInsightItem[];
+  critical_count: number;
+  high_count: number;
+  total_active: number;
+}
+

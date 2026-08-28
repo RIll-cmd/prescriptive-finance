@@ -6,7 +6,7 @@ from app.core.database import init_db
 from app.api.routes import (
     auth, users, accounts, money_sources, transactions, categories, analytics,
     goals, bills, debts, financial_health, safe_to_spend, simulator,
-    insights, autopilot, ai, security
+    insights, autopilot, ai, security, financial
 )
 
 @asynccontextmanager
@@ -49,6 +49,7 @@ app.include_router(simulator.router, prefix=f"{settings.API_V1_STR}/simulator", 
 app.include_router(insights.router, prefix=f"{settings.API_V1_STR}/insights", tags=["insights"])
 app.include_router(autopilot.router, prefix=f"{settings.API_V1_STR}/autopilot", tags=["autopilot"])
 app.include_router(ai.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])
+app.include_router(financial.router, prefix=f"{settings.API_V1_STR}/financial", tags=["financial"])
 app.include_router(security.router, prefix=f"{settings.API_V1_STR}/security", tags=["security"])
 
 @app.get("/health", tags=["health"])
