@@ -13,10 +13,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', href: '/dashboard' },
-  { label: 'Cards', icon: 'credit_card', href: '/money' },
-  { label: 'Analytics', icon: 'analytics', href: '/insights' },
-  { label: 'Profile', icon: 'person', href: '/accounts' },
-  { label: 'Wallet', icon: 'account_balance_wallet', href: '/transactions' },
+  { label: 'Money & Accounts', icon: 'account_balance_wallet', href: '/money' },
+  { label: 'Transactions Ledger', icon: 'receipt_long', href: '/transactions' },
+  { label: 'Financial Insights', icon: 'analytics', href: '/insights' },
+  { label: 'Profile Settings', icon: 'person', href: '/accounts' },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -52,9 +52,9 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-1 flex-1">
+      <nav className="flex flex-col gap-1.5 flex-1">
         {navItems.map((item) => {
-          const isActive = activeItem === item.href || (item.href === '/dashboard' && pathname === '/');
+          const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');
           return (
             <Link
               key={item.label}
@@ -66,7 +66,7 @@ export const Sidebar: React.FC = () => {
                   : 'text-white/30 hover:text-white/70 hover:bg-white/[0.04]'
               }`}
             >
-              <span className="material-symbols-rounded text-[24px]">{item.icon}</span>
+              <span className="material-symbols-rounded text-[22px]">{item.icon}</span>
 
               {/* Glow filter */}
               <div
@@ -90,7 +90,7 @@ export const Sidebar: React.FC = () => {
           href="/settings"
           className="group relative w-[42px] h-[42px] rounded-[12px] flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-300"
         >
-          <span className="material-symbols-rounded text-[24px]">settings</span>
+          <span className="material-symbols-rounded text-[22px]">settings</span>
           <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 bg-[#14142e] backdrop-blur-[16px] border border-white/[0.08] text-white/90 px-3 py-1.5 rounded-[6px] text-[0.75rem] font-medium whitespace-nowrap shadow-[0_4px_16px_rgba(0,0,0,0.5)] pointer-events-none opacity-0 translate-x-[-6px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 z-[1000]">
             Settings
           </div>
@@ -103,7 +103,7 @@ export const Sidebar: React.FC = () => {
             aria-label="Log out"
             className="group relative w-[42px] h-[42px] rounded-[12px] flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/[0.06] transition-all duration-300 border-none bg-transparent cursor-pointer"
           >
-            <span className="material-symbols-rounded text-[22px]">logout</span>
+            <span className="material-symbols-rounded text-[20px]">logout</span>
             <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 bg-[#14142e] backdrop-blur-[16px] border border-white/[0.08] text-red-300 px-3 py-1.5 rounded-[6px] text-[0.75rem] font-medium whitespace-nowrap shadow-[0_4px_16px_rgba(0,0,0,0.5)] pointer-events-none opacity-0 translate-x-[-6px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 z-[1000]">
               Sign out
             </div>

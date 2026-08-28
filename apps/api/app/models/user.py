@@ -24,4 +24,5 @@ class UserModel(Base):
     # Relationships
     money_sources = relationship("MoneySourceModel", back_populates="user", cascade="all, delete-orphan")
     categories = relationship("CategoryModel", back_populates="user", cascade="all, delete-orphan")
+    transactions = relationship("TransactionModel", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshTokenModel", back_populates="user", cascade="all, delete-orphan")

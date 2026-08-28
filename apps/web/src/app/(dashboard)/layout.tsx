@@ -5,6 +5,9 @@ import { ParticleBackground } from '@/components/ui/ParticleBackground';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
+import { AddTransactionModal } from '@/components/transactions/AddTransactionModal';
+import { EditTransactionModal } from '@/components/transactions/EditTransactionModal';
+import { TransactionDetailsModal } from '@/components/transactions/TransactionDetailsModal';
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function DashboardLayout({
@@ -12,7 +15,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isAuthenticated, checkAuth } = useAuthStore();
+  const { user, checkAuth } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -31,6 +34,11 @@ export default function DashboardLayout({
         <Header />
         <main>{children}</main>
       </div>
+
+      {/* Global Modals */}
+      <AddTransactionModal />
+      <EditTransactionModal />
+      <TransactionDetailsModal />
 
       {/* Onboarding Wizard for new accounts */}
       {user && !user.is_onboarded && <OnboardingModal />}

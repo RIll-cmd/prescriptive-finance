@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import init_db
 from app.api.routes import (
-    auth, users, accounts, money_sources, transactions, categories, goals,
-    bills, debts, financial_health, safe_to_spend, simulator,
+    auth, users, accounts, money_sources, transactions, categories, analytics,
+    goals, bills, debts, financial_health, safe_to_spend, simulator,
     insights, autopilot, ai, security
 )
 
@@ -37,8 +37,9 @@ app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["aut
 app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
 app.include_router(money_sources.router, prefix=f"{settings.API_V1_STR}/money-sources", tags=["money-sources"])
 app.include_router(accounts.router, prefix=f"{settings.API_V1_STR}/accounts", tags=["accounts"])
-app.include_router(transactions.router, prefix=f"{settings.API_V1_STR}/transactions", tags=["transactions"])
 app.include_router(categories.router, prefix=f"{settings.API_V1_STR}/categories", tags=["categories"])
+app.include_router(transactions.router, prefix=f"{settings.API_V1_STR}/transactions", tags=["transactions"])
+app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["analytics"])
 app.include_router(goals.router, prefix=f"{settings.API_V1_STR}/goals", tags=["goals"])
 app.include_router(bills.router, prefix=f"{settings.API_V1_STR}/bills", tags=["bills"])
 app.include_router(debts.router, prefix=f"{settings.API_V1_STR}/debts", tags=["debts"])
