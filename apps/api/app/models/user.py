@@ -7,9 +7,10 @@ class UserModel(Base):
     __tablename__ = "users"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
+    username = Column(String(50), unique=True, nullable=True, index=True)
+    email = Column(String(255), unique=True, nullable=True, index=True)
     password_hash = Column(String(255), nullable=False)
-    first_name = Column(String(100), nullable=False)
+    first_name = Column(String(100), nullable=True)
     last_name = Column(String(100), nullable=True)
     avatar_url = Column(String(500), nullable=True)
     currency = Column(String(10), default="PHP", nullable=False)
@@ -34,3 +35,4 @@ class UserModel(Base):
     bill_payments = relationship("BillPaymentModel", back_populates="user", cascade="all, delete-orphan")
     income_expectations = relationship("IncomeExpectationModel", back_populates="user", cascade="all, delete-orphan")
     financial_settings = relationship("FinancialSettingsModel", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    scenarios = relationship("ScenarioModel", back_populates="user", cascade="all, delete-orphan")

@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
@@ -6,8 +7,9 @@ from app.main import app
 async def test_money_sources_crud_and_isolation():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # Register User A
+        email_a = f"user_a_{uuid.uuid4().hex[:8]}@example.com"
         reg_a = await client.post("/api/v1/auth/register", json={
-            "email": "user_a@example.com",
+            "email": email_a,
             "password": "Password123!",
             "first_name": "UserA"
         })
@@ -15,8 +17,9 @@ async def test_money_sources_crud_and_isolation():
         headers_a = {"Authorization": f"Bearer {token_a}"}
 
         # Register User B
+        email_b = f"user_b_{uuid.uuid4().hex[:8]}@example.com"
         reg_b = await client.post("/api/v1/auth/register", json={
-            "email": "user_b@example.com",
+            "email": email_b,
             "password": "Password123!",
             "first_name": "UserB"
         })
@@ -52,10 +55,12 @@ async def test_money_sources_crud_and_isolation():
         assert data_a["total_count"] == 2
         assert float(data_a["total_liquid_balance"]) == 7500.00
 
-        # Verify User B has ZERO money sources (Tenant Isolation)
+        # Verify User B gets standard auto-seeded default sources and cannot see User A's sources
         list_b = await client.get("/api/v1/money-sources/", headers=headers_b)
         assert list_b.status_code == 200
-        assert list_b.json()["total_count"] == 0
+        assert list_b.json()["total_count"] == 3
+        user_b_ids = [item["id"] for item in list_b.json()["items"]]
+        assert source_id_a not in user_b_ids
 
         # User B CANNOT access User A's source
         bad_access = await client.get(f"/api/v1/money-sources/{source_id_a}", headers=headers_b)

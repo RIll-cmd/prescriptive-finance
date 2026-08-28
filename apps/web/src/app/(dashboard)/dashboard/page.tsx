@@ -9,6 +9,8 @@ import { TransactionsTable } from '@/components/dashboard/TransactionsTable';
 import { SafeToSpendWidget } from '@/components/dashboard/SafeToSpendWidget';
 import { UpcomingBillsWidget } from '@/components/dashboard/UpcomingBillsWidget';
 
+import { ForecastSummaryWidget } from '@/components/forecasting/ForecastSummaryWidget';
+
 export default function DashboardPage() {
   return (
     <div className="space-y-[18px]">
@@ -36,7 +38,10 @@ export default function DashboardPage() {
         <GoalsList />
       </div>
 
-      {/* 7. Transactions Ledger */}
+      {/* 7. Month-End & Forward Projections */}
+      <ForecastSummaryWidget />
+
+      {/* 8. Transactions Ledger */}
       <TransactionsTable />
     </div>
   );

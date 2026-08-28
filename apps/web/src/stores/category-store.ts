@@ -7,18 +7,33 @@ interface CategoryState {
   isLoading: boolean;
   error: string | null;
 
+  // Modal controls
+  isAddModalOpen: boolean;
+  isManageModalOpen: boolean;
+
   // Actions
   fetchCategories: () => Promise<void>;
   createCategory: (payload: CreateCategoryPayload) => Promise<Category>;
   updateCategory: (id: string, payload: UpdateCategoryPayload) => Promise<Category>;
   deleteCategory: (id: string, reassignToId?: string) => Promise<void>;
   getCategoryById: (id?: string | null) => Category | undefined;
+  openAddModal: () => void;
+  closeAddModal: () => void;
+  openManageModal: () => void;
+  closeManageModal: () => void;
 }
 
 export const useCategoryStore = create<CategoryState>((set, get) => ({
   categories: [],
   isLoading: false,
   error: null,
+  isAddModalOpen: false,
+  isManageModalOpen: false,
+
+  openAddModal: () => set({ isAddModalOpen: true }),
+  closeAddModal: () => set({ isAddModalOpen: false }),
+  openManageModal: () => set({ isManageModalOpen: true }),
+  closeManageModal: () => set({ isManageModalOpen: false }),
 
   fetchCategories: async () => {
     set({ isLoading: true, error: null });

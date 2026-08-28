@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { useCategoryStore } from '@/stores/category-store';
 
 interface AddCategoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 const PRESET_ICONS = [
@@ -27,6 +27,8 @@ const PRESET_ICONS = [
   'local_gas_station',
   'fitness_center',
   'savings',
+  'shield',
+  'diamond',
 ];
 
 const PRESET_COLORS = [
@@ -42,8 +44,14 @@ const PRESET_COLORS = [
   '#14B8A6',
 ];
 
-export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onClose }) => {
-  const { createCategory } = useCategoryStore();
+export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
+  isOpen: propsIsOpen,
+  onClose: propsOnClose,
+}) => {
+  const { createCategory, isAddModalOpen, closeAddModal } = useCategoryStore();
+
+  const isOpen = propsIsOpen !== undefined ? propsIsOpen : isAddModalOpen;
+  const handleClose = propsOnClose || closeAddModal;
 
   const [name, setName] = useState('');
   const [type, setType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
@@ -74,7 +82,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
         is_discretionary: isDiscretionary,
       });
       setName('');
-      onClose();
+      handleClose();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to create category.');
     } finally {
@@ -83,7 +91,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-[24px] animate-[fadeIn_0.25s_ease-out]">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-[24px] animate-[fadeIn_0.25s_ease-out]">
       <div className="relative w-full max-w-[480px] rounded-[24px] bg-[rgba(5,5,16,0.95)] backdrop-blur-[32px] border border-white/[0.08] p-6 sm:p-8 text-white shadow-[0_20px_80px_rgba(0,0,0,0.8)] overflow-hidden animate-[cardReveal_0.3s_cubic-bezier(0.16,1,0.3,1)]">
         {/* Header */}
         <div className="flex items-center justify-between mb-5 pb-3 border-b border-white/[0.06]">
@@ -95,7 +103,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close modal"
             className="w-8 h-8 rounded-full bg-white/[0.04] hover:bg-white/[0.1] text-white/50 hover:text-white flex items-center justify-center transition-all"
           >
@@ -180,7 +188,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
             <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-2 block">
               Category Icon
             </label>
-            <div className="grid grid-cols-6 gap-2 max-h-[140px] overflow-y-auto p-1 bg-white/[0.02] border border-white/[0.04] rounded-[12px]">
+            <div className="grid grid-cols-5 gap-2 max-h-[140px] overflow-y-auto p-1 bg-white/[0.02] border border-white/[0.04] rounded-[12px]">
               {PRESET_ICONS.map((ic) => (
                 <button
                   key={ic}
@@ -202,7 +210,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/[0.06] mt-6">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2.5 rounded-[10px] text-[0.82rem] font-medium text-white/60 hover:text-white hover:bg-white/[0.04] transition-all"
             >
               Cancel

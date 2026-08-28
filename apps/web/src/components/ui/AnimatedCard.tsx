@@ -50,15 +50,12 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
       if (cardRef.current) {
         cardRef.current.style.transform = `rotateX(${s.current.rx.toFixed(2)}deg) rotateY(${s.current.ry.toFixed(2)}deg)`;
 
-        const shadowX = -s.current.ry * 0.8;
-        const shadowY = s.current.rx * 0.5 + 12;
-        const spread = s.hovering ? 55 : 30;
+        const shadowX = -s.current.ry * 0.6;
+        const shadowY = s.current.rx * 0.4 + 14;
+        const spread = s.hovering ? 45 : 30;
 
-        // Dual-tone shadow: purple ambient + blue directional
         cardRef.current.style.boxShadow = `
-          ${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px ${spread}px rgba(0, 0, 0, 0.45),
-          ${(shadowX * 0.3).toFixed(1)}px ${(shadowY * 0.5).toFixed(1)}px 18px rgba(168, 85, 247, ${s.hovering ? 0.14 : 0.04}),
-          ${(shadowX * 0.2).toFixed(1)}px ${(shadowY * 0.3).toFixed(1)}px 25px rgba(59, 130, 246, ${s.hovering ? 0.08 : 0}),
+          ${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px ${spread}px rgba(0, 0, 0, 0.5),
           0 0 0 1px rgba(255, 255, 255, ${s.hovering ? 0.1 : 0.06}) inset
         `;
       }

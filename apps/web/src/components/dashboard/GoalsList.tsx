@@ -103,9 +103,16 @@ export const GoalsList: React.FC = () => {
                   {/* Goal Details */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
-                      <h3 className="text-[0.85rem] font-semibold text-white truncate max-w-[140px]">
-                        {goal.name}
-                      </h3>
+                      <div className="flex items-center gap-1.5 truncate max-w-[150px]">
+                        <h3 className="text-[0.85rem] font-semibold text-white truncate">
+                          {goal.name}
+                        </h3>
+                        {goal.category && (
+                          <span className="px-1.5 py-0.2 rounded-[3px] text-[0.58rem] font-medium bg-white/[0.06] text-white/50 shrink-0">
+                            {goal.category}
+                          </span>
+                        )}
+                      </div>
                       <span className={`px-1.5 py-0.5 rounded-[4px] text-[0.62rem] font-bold uppercase tracking-wider border ${pace.class}`}>
                         {pace.label}
                       </span>

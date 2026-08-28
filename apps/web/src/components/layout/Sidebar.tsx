@@ -13,6 +13,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', href: '/dashboard' },
+  { label: 'What-If Simulator', icon: 'science', href: '/simulator' },
   { label: 'Safe-to-Spend', icon: 'verified_user', href: '/safe-to-spend' },
   { label: 'Financial Goals', icon: 'flag', href: '/goals' },
   { label: 'Bills & Obligations', icon: 'receipt_long', href: '/bills' },

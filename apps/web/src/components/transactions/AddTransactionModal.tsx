@@ -8,8 +8,8 @@ import { TransactionType } from '@financial-os/shared-types';
 
 export const AddTransactionModal: React.FC = () => {
   const { isAddModalOpen, prefilledType, closeModals, createTransaction } = useTransactionStore();
-  const { moneySources, user } = useAuthStore();
-  const { categories, fetchCategories } = useCategoryStore();
+  const { moneySources, user, openAddSourceModal } = useAuthStore();
+  const { categories, fetchCategories, openAddModal: openAddCategoryModal } = useCategoryStore();
 
   const [type, setType] = useState<TransactionType>(prefilledType || 'EXPENSE');
   const [amount, setAmount] = useState<string>('');
@@ -73,7 +73,7 @@ export const AddTransactionModal: React.FC = () => {
     }
 
     if (!sourceId) {
-      setErrorMsg('Please select a money source.');
+      setErrorMsg('Please select or create a money source.');
       return;
     }
 
@@ -196,33 +196,66 @@ export const AddTransactionModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Money Source Dropdown */}
+          {/* Money Source Dropdown & Custom Category */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
-                {type === 'TRANSFER' ? 'From Source' : 'Money Source'}
-              </label>
-              <select
-                value={sourceId}
-                onChange={(e) => setSourceId(e.target.value)}
-                required
-                className="w-full bg-[#0d0d21] border border-white/[0.08] rounded-[10px] px-3.5 py-2.5 text-[0.82rem] font-medium text-white outline-none focus:border-[#3869D2] transition-all"
-              >
-                {moneySources.map((src) => (
-                  <option key={src.id} value={src.id} className="bg-[#0f0f24] text-white">
-                    {src.name} ({currencySymbol}
-                    {Number(src.current_balance).toLocaleString('en-US', { minimumFractionDigits: 2 })})
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em]">
+                  {type === 'TRANSFER' ? 'From Source' : 'Money Source'}
+                </label>
+                <button
+                  type="button"
+                  onClick={openAddSourceModal}
+                  className="text-[0.7rem] text-[#3869D2] hover:text-[#5a8aee] font-semibold flex items-center gap-0.5"
+                >
+                  <span className="material-symbols-rounded text-[13px]">add</span>
+                  <span>New</span>
+                </button>
+              </div>
+
+              {moneySources.length === 0 ? (
+                <div className="p-2 rounded-[8px] bg-white/[0.02] border border-dashed border-white/10 text-center">
+                  <button
+                    type="button"
+                    onClick={openAddSourceModal}
+                    className="text-[0.75rem] text-[#3869D2] font-bold hover:underline"
+                  >
+                    + Add Account
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={sourceId}
+                  onChange={(e) => setSourceId(e.target.value)}
+                  required
+                  className="w-full bg-[#0d0d21] border border-white/[0.08] rounded-[10px] px-3.5 py-2.5 text-[0.82rem] font-medium text-white outline-none focus:border-[#3869D2] transition-all"
+                >
+                  {moneySources.map((src) => (
+                    <option key={src.id} value={src.id} className="bg-[#0f0f24] text-white">
+                      {src.name} ({currencySymbol}
+                      {Number(src.current_balance).toLocaleString('en-US', { minimumFractionDigits: 2 })})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {/* Destination Source (Transfer only) */}
             {type === 'TRANSFER' ? (
               <div>
-                <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
-                  To Destination
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em]">
+                    To Destination
+                  </label>
+                  <button
+                    type="button"
+                    onClick={openAddSourceModal}
+                    className="text-[0.7rem] text-[#C57CF9] hover:text-white font-semibold flex items-center gap-0.5"
+                  >
+                    <span className="material-symbols-rounded text-[13px]">add</span>
+                    <span>New</span>
+                  </button>
+                </div>
                 <select
                   value={destSourceId}
                   onChange={(e) => setDestSourceId(e.target.value)}
@@ -242,9 +275,19 @@ export const AddTransactionModal: React.FC = () => {
             ) : (
               /* Category (Expense / Income) */
               <div>
-                <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
-                  Category
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em]">
+                    Category
+                  </label>
+                  <button
+                    type="button"
+                    onClick={openAddCategoryModal}
+                    className="text-[0.7rem] text-[#d9a4ff] hover:text-white font-semibold flex items-center gap-0.5"
+                  >
+                    <span className="material-symbols-rounded text-[13px]">add</span>
+                    <span>New</span>
+                  </button>
+                </div>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}

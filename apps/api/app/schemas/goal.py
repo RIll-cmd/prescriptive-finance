@@ -13,6 +13,8 @@ class GoalCreate(BaseModel):
     category: Optional[str] = None
     color_hex: Optional[str] = Field(default="#C57CF9", max_length=20)
     icon: Optional[str] = Field(default="savings", max_length=50)
+    money_source_id: Optional[str] = None
+    record_transaction: Optional[bool] = False
 
 class GoalUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=150)

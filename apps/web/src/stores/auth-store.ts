@@ -10,6 +10,7 @@ interface AuthState {
   moneySources: MoneySource[];
   totalBalance: number;
   error: string | null;
+  isAddSourceModalOpen: boolean;
 
   // Auth actions
   login: (payload: LoginPayload) => Promise<User>;
@@ -24,6 +25,8 @@ interface AuthState {
   addMoneySource: (payload: CreateMoneySourcePayload) => Promise<MoneySource>;
   deleteMoneySource: (id: string) => Promise<void>;
   completeOnboarding: (name: string, currency: string, initialSources: CreateMoneySourcePayload[]) => Promise<void>;
+  openAddSourceModal: () => void;
+  closeAddSourceModal: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -33,6 +36,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   moneySources: [],
   totalBalance: 0,
   error: null,
+  isAddSourceModalOpen: false,
+
+  openAddSourceModal: () => set({ isAddSourceModalOpen: true }),
+  closeAddSourceModal: () => set({ isAddSourceModalOpen: false }),
 
   clearError: () => set({ error: null }),
 

@@ -168,7 +168,14 @@ export default function GoalsPage() {
                         <span className="material-symbols-rounded text-[22px]">{goal.icon}</span>
                       </div>
                       <div>
-                        <h2 className="text-[1.05rem] font-bold text-white tracking-tight">{goal.name}</h2>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="text-[1.05rem] font-bold text-white tracking-tight">{goal.name}</h2>
+                          {goal.category && (
+                            <span className="px-2 py-0.5 rounded-[6px] text-[0.65rem] font-semibold bg-white/[0.06] text-white/70 border border-white/10">
+                              {goal.category}
+                            </span>
+                          )}
+                        </div>
                         {goal.description && (
                           <p className="text-[0.75rem] text-white/40 line-clamp-1">{goal.description}</p>
                         )}

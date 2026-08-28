@@ -13,6 +13,9 @@ import { ContributeGoalModal } from '@/components/goals/ContributeGoalModal';
 import { AddBillModal } from '@/components/bills/AddBillModal';
 import { PayBillModal } from '@/components/bills/PayBillModal';
 import { SafeToSpendBreakdownModal } from '@/components/safe-to-spend/SafeToSpendBreakdownModal';
+import { AddMoneySourceModal } from '@/components/money/AddMoneySourceModal';
+import { AddCategoryModal } from '@/components/categories/AddCategoryModal';
+import { CategoryManagementModal } from '@/components/categories/CategoryManagementModal';
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function DashboardLayout({
@@ -49,6 +52,9 @@ export default function DashboardLayout({
       <AddBillModal />
       <PayBillModal />
       <SafeToSpendBreakdownModal />
+      <AddMoneySourceModal />
+      <AddCategoryModal />
+      <CategoryManagementModal />
 
       {/* Onboarding Wizard for new accounts */}
       {user && !user.is_onboarded && <OnboardingModal />}

@@ -2,18 +2,23 @@ import { apiClient } from '@/lib/api';
 import { User, AuthResponse } from '@financial-os/shared-types';
 
 export interface RegisterPayload {
-  email: string;
+  username: string;
   password: string;
-  first_name: string;
+  email?: string;
+  first_name?: string;
   last_name?: string;
+  currency?: string;
 }
 
 export interface LoginPayload {
-  email: string;
+  username_or_email: string;
   password: string;
+  email?: string;
 }
 
 export interface UserUpdatePayload {
+  username?: string;
+  email?: string;
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
@@ -33,7 +38,10 @@ export const authApi = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
     return apiClient<AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        username_or_email: payload.username_or_email || payload.email,
+        password: payload.password,
+      }),
     });
   },
 

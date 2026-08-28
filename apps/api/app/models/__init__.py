@@ -12,6 +12,8 @@ from app.models.bill import BillModel
 from app.models.bill_payment import BillPaymentModel
 from app.models.income_expectation import IncomeExpectationModel
 from app.models.financial_settings import FinancialSettingsModel
+from app.models.scenario import ScenarioModel
+from app.models.scenario_change import ScenarioChangeModel
 
 __all__ = [
     "UserModel",
@@ -28,4 +30,6 @@ __all__ = [
     "BillPaymentModel",
     "IncomeExpectationModel",
     "FinancialSettingsModel",
+    "ScenarioModel",
+    "ScenarioChangeModel",
 ]

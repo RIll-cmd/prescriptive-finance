@@ -3,21 +3,17 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useTransactionStore } from '@/stores/transaction-store';
-import { AddMoneySourceModal } from '@/components/money/AddMoneySourceModal';
+import { useCategoryStore } from '@/stores/category-store';
 import { AdjustBalanceModal } from '@/components/money/AdjustBalanceModal';
-import { CategoryManagementModal } from '@/components/categories/CategoryManagementModal';
-import { AddCategoryModal } from '@/components/categories/AddCategoryModal';
 import { MoneySource } from '@financial-os/shared-types';
 
 export default function MoneyPage() {
-  const { moneySources, totalBalance, user, deleteMoneySource } = useAuthStore();
+  const { moneySources, totalBalance, user, openAddSourceModal } = useAuthStore();
+  const { openManageModal } = useCategoryStore();
   const { openAddModal } = useTransactionStore();
 
-  const [isAddSourceOpen, setIsAddSourceOpen] = useState(false);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [selectedSourceForAdjust, setSelectedSourceForAdjust] = useState<MoneySource | null>(null);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
 
   const currencySymbol = user?.currency === 'PHP' ? '₱' : '$';
 
@@ -41,7 +37,7 @@ export default function MoneyPage() {
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => setIsCategoryModalOpen(true)}
+            onClick={openManageModal}
             className="px-4 py-2.5 rounded-[12px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white font-semibold text-[0.82rem] transition-all flex items-center gap-2"
           >
             <span className="material-symbols-rounded text-[18px] text-[#d9a4ff]">tune</span>
@@ -49,7 +45,7 @@ export default function MoneyPage() {
           </button>
 
           <button
-            onClick={() => setIsAddSourceOpen(true)}
+            onClick={openAddSourceModal}
             className="group relative flex items-center gap-2 bg-gradient-to-br from-[#3869D2] to-[#C57CF9] border-none rounded-[12px] px-5 py-2.5 text-white font-bold text-[0.85rem] cursor-pointer shadow-[0_4px_24px_rgba(56,105,210,0.3)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 overflow-hidden"
           >
             <span className="material-symbols-rounded text-[18px]">add_card</span>
@@ -113,7 +109,7 @@ export default function MoneyPage() {
             </div>
             <p className="text-[0.9rem] font-semibold text-white/70">No money sources added</p>
             <button
-              onClick={() => setIsAddSourceOpen(true)}
+              onClick={openAddSourceModal}
               className="px-4 py-2 rounded-[10px] bg-[#3869D2] text-white text-[0.8rem] font-bold"
             >
               + Create First Account
@@ -215,11 +211,6 @@ export default function MoneyPage() {
       </div>
 
       {/* Modals */}
-      <AddMoneySourceModal
-        isOpen={isAddSourceOpen}
-        onClose={() => setIsAddSourceOpen(false)}
-      />
-
       <AdjustBalanceModal
         isOpen={isAdjustModalOpen}
         onClose={() => {
@@ -227,17 +218,6 @@ export default function MoneyPage() {
           setSelectedSourceForAdjust(null);
         }}
         initialSource={selectedSourceForAdjust}
-      />
-
-      <CategoryManagementModal
-        isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-        onOpenAddModal={() => setIsAddCategoryOpen(true)}
-      />
-
-      <AddCategoryModal
-        isOpen={isAddCategoryOpen}
-        onClose={() => setIsAddCategoryOpen(false)}
       />
     </div>
   );

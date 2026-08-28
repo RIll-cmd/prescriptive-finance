@@ -9,8 +9,8 @@ import { TransactionType } from '@financial-os/shared-types';
 export const EditTransactionModal: React.FC = () => {
   const { isEditModalOpen, selectedTransaction, closeModals, updateTransaction } =
     useTransactionStore();
-  const { moneySources, user } = useAuthStore();
-  const { categories, fetchCategories } = useCategoryStore();
+  const { moneySources, user, openAddSourceModal } = useAuthStore();
+  const { categories, fetchCategories, openAddModal: openAddCategoryModal } = useCategoryStore();
 
   const [type, setType] = useState<TransactionType>('EXPENSE');
   const [amount, setAmount] = useState<string>('');
@@ -146,9 +146,19 @@ export const EditTransactionModal: React.FC = () => {
           {/* Money Source Dropdown */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
-                {type === 'TRANSFER' ? 'From Source' : 'Money Source'}
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em]">
+                  {type === 'TRANSFER' ? 'From Source' : 'Money Source'}
+                </label>
+                <button
+                  type="button"
+                  onClick={openAddSourceModal}
+                  className="text-[0.7rem] text-[#3869D2] hover:text-[#5a8aee] font-semibold flex items-center gap-0.5"
+                >
+                  <span className="material-symbols-rounded text-[13px]">add</span>
+                  <span>New</span>
+                </button>
+              </div>
               <select
                 value={sourceId}
                 onChange={(e) => setSourceId(e.target.value)}
@@ -167,9 +177,19 @@ export const EditTransactionModal: React.FC = () => {
             {/* Destination or Category */}
             {type === 'TRANSFER' ? (
               <div>
-                <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
-                  To Destination
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em]">
+                    To Destination
+                  </label>
+                  <button
+                    type="button"
+                    onClick={openAddSourceModal}
+                    className="text-[0.7rem] text-[#C57CF9] hover:text-white font-semibold flex items-center gap-0.5"
+                  >
+                    <span className="material-symbols-rounded text-[13px]">add</span>
+                    <span>New</span>
+                  </button>
+                </div>
                 <select
                   value={destSourceId}
                   onChange={(e) => setDestSourceId(e.target.value)}
@@ -188,9 +208,19 @@ export const EditTransactionModal: React.FC = () => {
               </div>
             ) : (
               <div>
-                <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
-                  Category
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em]">
+                    Category
+                  </label>
+                  <button
+                    type="button"
+                    onClick={openAddCategoryModal}
+                    className="text-[0.7rem] text-[#d9a4ff] hover:text-white font-semibold flex items-center gap-0.5"
+                  >
+                    <span className="material-symbols-rounded text-[13px]">add</span>
+                    <span>New</span>
+                  </button>
+                </div>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}

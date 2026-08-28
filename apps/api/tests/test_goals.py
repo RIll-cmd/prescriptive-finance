@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from httpx import AsyncClient, ASGITransport
 from datetime import date, timedelta
@@ -10,10 +11,11 @@ from app.core.security import get_password_hash, create_access_token
 @pytest.mark.asyncio
 async def test_goal_lifecycle_and_pace():
     # 1. Create User
+    user_id = f"test-goal-user-{uuid.uuid4().hex[:8]}"
     async with AsyncSessionLocal() as session:
         user = UserModel(
-            id="test-goal-user-1",
-            email="goal_user@example.com",
+            id=user_id,
+            email=f"{user_id}@example.com",
             password_hash=get_password_hash("password123"),
             first_name="Pace",
             last_name="Tester"
@@ -21,7 +23,7 @@ async def test_goal_lifecycle_and_pace():
         session.add(user)
         await session.commit()
 
-    token = create_access_token(subject="test-goal-user-1")
+    token = create_access_token(subject=user_id)
     headers = {"Authorization": f"Bearer {token}"}
 
     transport = ASGITransport(app=app)
@@ -91,3 +93,67 @@ async def test_goal_lifecycle_and_pace():
         list_res = await client.get("/api/v1/goals/", headers=headers)
         assert list_res.status_code == 200
         assert list_res.json()["completed_count"] == 1
+
+@pytest.mark.asyncio
+async def test_goal_with_custom_category_and_money_source():
+    user_id = f"test-goal-custom-{uuid.uuid4().hex[:8]}"
+    async with AsyncSessionLocal() as session:
+        user = UserModel(
+            id=user_id,
+            email=f"{user_id}@example.com",
+            password_hash=get_password_hash("password123"),
+            first_name="Custom",
+            last_name="Tester"
+        )
+        session.add(user)
+        await session.commit()
+
+    token = create_access_token(subject=user_id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Create Money Source with ₱100,000 balance
+        ms_res = await client.post("/api/v1/money-sources/", json={
+            "name": "Maya Savings",
+            "type": "E_WALLET",
+            "currency": "PHP",
+            "initial_balance": 100000.00,
+            "color_hex": "#22C55E",
+            "icon": "savings"
+        }, headers=headers)
+        assert ms_res.status_code == 201
+        source_id = ms_res.json()["id"]
+
+        # Create Goal with custom category, initial saved ₱15,000 funded from source
+        goal_payload = {
+            "name": "Emergency Fund",
+            "description": "6 months living expenses",
+            "target_amount": 150000.00,
+            "current_amount": 15000.00,
+            "target_date": None,
+            "priority": "HIGH",
+            "category": "Emergency & Security",
+            "color_hex": "#10B981",
+            "icon": "shield",
+            "money_source_id": source_id,
+            "record_transaction": True
+        }
+        res = await client.post("/api/v1/goals/", json=goal_payload, headers=headers)
+        assert res.status_code == 201
+        goal_data = res.json()
+        assert goal_data["name"] == "Emergency Fund"
+        assert goal_data["category"] == "Emergency & Security"
+        assert float(goal_data["current_amount"]) == 15000.00
+        assert float(goal_data["analytics"]["progress_pct"]) == 10.0
+
+        # Verify Money Source was deducted by ₱15,000 -> ₱85,000
+        ms_check = await client.get(f"/api/v1/money-sources/{source_id}", headers=headers)
+        assert ms_check.status_code == 200
+        assert float(ms_check.json()["current_balance"]) == 85000.00
+
+        # Verify initial contribution was created in contribution history
+        contrib_list = await client.get(f"/api/v1/goals/{goal_data['id']}/contributions", headers=headers)
+        assert contrib_list.status_code == 200
+        assert contrib_list.json()["total_count"] == 1
+        assert float(contrib_list.json()["total_amount"]) == 15000.00

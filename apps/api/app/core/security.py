@@ -17,7 +17,12 @@ def get_password_hash(password: str) -> str:
     """Generates an Argon2id password hash."""
     return pwd_context.hash(password)
 
-def create_access_token(subject: Union[str, Any], email: Optional[str] = None, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(
+    subject: Union[str, Any],
+    email: Optional[str] = None,
+    username: Optional[str] = None,
+    expires_delta: Optional[timedelta] = None
+) -> str:
     """Creates a signed short-lived JWT access token."""
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -26,6 +31,7 @@ def create_access_token(subject: Union[str, Any], email: Optional[str] = None, e
     
     to_encode = {
         "sub": str(subject),
+        "username": username or "",
         "email": email or "",
         "exp": expire,
         "type": "access"

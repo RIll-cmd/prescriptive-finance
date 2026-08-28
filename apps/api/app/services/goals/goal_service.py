@@ -23,7 +23,8 @@ from app.schemas.goal import (
 class GoalService:
     @classmethod
     async def create_goal(cls, db: AsyncSession, user_id: str, payload: GoalCreate) -> GoalResponse:
-        initial_status = "COMPLETED" if payload.current_amount and payload.current_amount >= payload.target_amount else "ACTIVE"
+        init_amount = payload.current_amount or Decimal("0.00")
+        initial_status = "COMPLETED" if init_amount >= payload.target_amount else "ACTIVE"
         completed_at = datetime.now(timezone.utc) if initial_status == "COMPLETED" else None
 
         goal = GoalModel(
@@ -32,7 +33,7 @@ class GoalService:
             name=payload.name,
             description=payload.description,
             target_amount=payload.target_amount,
-            current_amount=payload.current_amount or Decimal("0.00"),
+            current_amount=init_amount,
             target_date=payload.target_date,
             priority=payload.priority,
             status=initial_status,
@@ -42,6 +43,46 @@ class GoalService:
             completed_at=completed_at
         )
         db.add(goal)
+
+        # If user provided initial saved amount
+        if init_amount > Decimal("0.00"):
+            c_date = date.today()
+            tx_id = None
+
+            if payload.money_source_id and payload.record_transaction:
+                ms_stmt = select(MoneySourceModel).where(
+                    MoneySourceModel.id == payload.money_source_id,
+                    MoneySourceModel.user_id == user_id
+                )
+                source = (await db.execute(ms_stmt)).scalar_one_or_none()
+                if source:
+                    tx = TransactionModel(
+                        id=str(uuid.uuid4()),
+                        user_id=user_id,
+                        money_source_id=source.id,
+                        type="EXPENSE",
+                        amount=init_amount,
+                        merchant=f"Goal: {goal.name}",
+                        description=f"Initial seed allocation to {goal.name}",
+                        transaction_date=c_date,
+                        source="MANUAL"
+                    )
+                    db.add(tx)
+                    source.current_balance -= init_amount
+                    tx_id = tx.id
+
+            contrib = GoalContributionModel(
+                id=str(uuid.uuid4()),
+                goal_id=goal.id,
+                user_id=user_id,
+                amount=init_amount,
+                contribution_date=c_date,
+                money_source_id=payload.money_source_id,
+                transaction_id=tx_id,
+                note="Initial saved balance"
+            )
+            db.add(contrib)
+
         await db.commit()
         await db.refresh(goal)
         return await cls._enrich_goal(db, goal)

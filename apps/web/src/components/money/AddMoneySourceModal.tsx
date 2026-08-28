@@ -5,8 +5,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { MoneySourceType } from '@financial-os/shared-types';
 
 interface AddMoneySourceModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 const PRESET_ICONS = [
@@ -29,8 +29,14 @@ const PRESET_COLORS = [
   '#06B6D4', // Cyan (GoTyme)
 ];
 
-export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({ isOpen, onClose }) => {
-  const { addMoneySource, user } = useAuthStore();
+export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
+  isOpen: propsIsOpen,
+  onClose: propsOnClose,
+}) => {
+  const { addMoneySource, user, isAddSourceModalOpen, closeAddSourceModal } = useAuthStore();
+
+  const isOpen = propsIsOpen !== undefined ? propsIsOpen : isAddSourceModalOpen;
+  const handleClose = propsOnClose || closeAddSourceModal;
 
   const [name, setName] = useState('');
   const [type, setType] = useState<MoneySourceType>('E_WALLET');
@@ -71,7 +77,7 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({ isOpen
       });
       setName('');
       setInitialBalance('');
-      onClose();
+      handleClose();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to add money source.');
     } finally {
@@ -80,7 +86,7 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({ isOpen
   };
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-[24px] animate-[fadeIn_0.25s_ease-out]">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-[24px] animate-[fadeIn_0.25s_ease-out]">
       <div className="relative w-full max-w-[480px] rounded-[24px] bg-[rgba(5,5,16,0.95)] backdrop-blur-[32px] border border-white/[0.08] p-6 sm:p-8 text-white shadow-[0_20px_80px_rgba(0,0,0,0.8)] overflow-hidden animate-[cardReveal_0.3s_cubic-bezier(0.16,1,0.3,1)]">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/[0.06]">
@@ -92,7 +98,7 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({ isOpen
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close modal"
             className="w-8 h-8 rounded-full bg-white/[0.04] hover:bg-white/[0.1] text-white/50 hover:text-white flex items-center justify-center transition-all"
           >
@@ -115,7 +121,7 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({ isOpen
             </label>
             <input
               type="text"
-              placeholder="e.g. Maya, BDO Savings, Petty Cash"
+              placeholder="e.g. Maya, BDO Savings, Petty Cash, Crypto Wallet"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -139,7 +145,7 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({ isOpen
                 <option value="BANK" className="bg-[#0f0f24]">Bank Account</option>
                 <option value="CASH" className="bg-[#0f0f24]">Cash on Hand</option>
                 <option value="CREDIT_CARD" className="bg-[#0f0f24]">Credit Card</option>
-                <option value="OTHER" className="bg-[#0f0f24]">Other Asset</option>
+                <option value="OTHER" className="bg-[#0f0f24]">Other Asset / Investment</option>
               </select>
             </div>
 
@@ -210,7 +216,7 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({ isOpen
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/[0.06] mt-6">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2.5 rounded-[10px] text-[0.82rem] font-medium text-white/60 hover:text-white hover:bg-white/[0.04] transition-all"
             >
               Cancel

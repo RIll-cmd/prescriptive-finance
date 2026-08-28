@@ -39,14 +39,12 @@ const FloatingCard: React.FC = () => {
       s.current.gy = lerp(s.current.gy, s.target.gy, sm * 1.5);
 
       if (cardRef.current) {
-        const shadowX = -s.current.ry * 0.8;
-        const shadowY = s.current.rx * 0.5 + 14;
+        const shadowX = -s.current.ry * 0.6;
+        const shadowY = s.current.rx * 0.4 + 16;
         cardRef.current.style.transform = `rotateX(${s.current.rx.toFixed(2)}deg) rotateY(${s.current.ry.toFixed(2)}deg)`;
         cardRef.current.style.boxShadow = `
-          ${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px 60px rgba(0,0,0,0.5),
-          ${(shadowX * 0.3).toFixed(1)}px ${(shadowY * 0.5).toFixed(1)}px 20px rgba(197,124,249,${s.hovering ? 0.15 : 0.08}),
-          0 0 80px rgba(56,105,210,0.06),
-          0 0 0 1px rgba(255,255,255,0.07) inset
+          ${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px 48px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset
         `;
       }
       if (glareRef.current) {
@@ -323,7 +321,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading, error, clearError } = useAuthStore();
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -332,13 +330,13 @@ export default function LoginPage() {
     clearError();
     setLocalError(null);
 
-    if (!email.trim() || !password) {
-      setLocalError('Please fill in both email and password.');
+    if (!identifier.trim() || !password) {
+      setLocalError('Please fill in both your username/email and password.');
       return;
     }
 
     try {
-      await login({ email: email.trim(), password });
+      await login({ username_or_email: identifier.trim(), password });
       router.push('/dashboard');
     } catch (err: any) {
       setLocalError(err?.message || 'Failed to sign in. Please check your credentials.');
@@ -450,12 +448,12 @@ export default function LoginPage() {
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                   <FloatingInput
-                    id="email"
-                    label="Email address"
-                    type="email"
-                    icon="mail"
-                    value={email}
-                    onChange={setEmail}
+                    id="identifier"
+                    label="Username or Email"
+                    type="text"
+                    icon="alternate_email"
+                    value={identifier}
+                    onChange={setIdentifier}
                     required
                   />
                   <FloatingInput

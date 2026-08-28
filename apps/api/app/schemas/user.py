@@ -3,8 +3,9 @@ from typing import Optional
 from datetime import datetime
 
 class UserBase(BaseModel):
-    email: EmailStr
-    first_name: str = Field(..., min_length=1, max_length=100)
+    username: str = Field(..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_.\-]+$")
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = Field(None, max_length=100)
     last_name: Optional[str] = Field(None, max_length=100)
     avatar_url: Optional[str] = None
     currency: str = Field("PHP", max_length=10)
@@ -14,7 +15,9 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=6, max_length=128)
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    username: Optional[str] = Field(None, min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_.\-]+$")
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = Field(None, max_length=100)
     last_name: Optional[str] = Field(None, max_length=100)
     avatar_url: Optional[str] = None
     currency: Optional[str] = Field(None, max_length=10)
@@ -25,8 +28,9 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    email: str
-    first_name: str
+    username: Optional[str] = None
+    email: Optional[str] = None
+    first_name: Optional[str] = None
     last_name: Optional[str] = None
     avatar_url: Optional[str] = None
     currency: str

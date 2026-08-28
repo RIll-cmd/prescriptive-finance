@@ -38,14 +38,12 @@ const FloatingCard: React.FC = () => {
       s.current.gy = lerp(s.current.gy, s.target.gy, sm * 1.5);
 
       if (cardRef.current) {
-        const shadowX = -s.current.ry * 0.8;
-        const shadowY = s.current.rx * 0.5 + 14;
+        const shadowX = -s.current.ry * 0.6;
+        const shadowY = s.current.rx * 0.4 + 16;
         cardRef.current.style.transform = `rotateX(${s.current.rx.toFixed(2)}deg) rotateY(${s.current.ry.toFixed(2)}deg)`;
         cardRef.current.style.boxShadow = `
-          ${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px 60px rgba(0,0,0,0.5),
-          ${(shadowX * 0.3).toFixed(1)}px ${(shadowY * 0.5).toFixed(1)}px 20px rgba(197,124,249,${s.hovering ? 0.15 : 0.08}),
-          0 0 80px rgba(56,105,210,0.06),
-          0 0 0 1px rgba(255,255,255,0.07) inset
+          ${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px 48px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset
         `;
       }
       if (glareRef.current) {
@@ -189,8 +187,7 @@ const ParticleBackground: React.FC = () => {
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
+      for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
 
@@ -262,7 +259,8 @@ const FloatingInput: React.FC<{
   value: string;
   onChange: (val: string) => void;
   required?: boolean;
-}> = ({ id, label, type = 'text', icon, value, onChange, required = false }) => {
+  placeholder?: string;
+}> = ({ id, label, type = 'text', icon, value, onChange, required = false, placeholder }) => {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -277,21 +275,19 @@ const FloatingInput: React.FC<{
         `}
       >
         <span
-          className={`material-symbols-rounded text-[20px] transition-colors duration-300 shrink-0 ${
-            focused ? 'text-[#3869D2]' : 'text-white/25'
-          }`}
+          className={`
+            material-symbols-rounded text-[20px] transition-colors duration-300 select-none
+            ${focused ? 'text-[#C57CF9]' : 'text-white/30 group-hover:text-white/50'}
+          `}
         >
           {icon}
         </span>
-        <div className="relative flex-1">
+        <div className="flex-1 flex flex-col justify-center min-h-[40px]">
           <label
             htmlFor={id}
             className={`
-              absolute left-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none origin-left
-              ${focused || value
-                ? 'text-[0.65rem] -top-[6px] font-semibold tracking-[0.08em] text-[#C57CF9]/80'
-                : 'text-[0.88rem] top-1/2 -translate-y-1/2 text-white/30 font-medium'
-              }
+              block text-[0.68rem] font-semibold tracking-[0.06em] uppercase transition-colors duration-300 select-none
+              ${focused ? 'text-[#3869D2]' : 'text-white/40'}
             `}
           >
             {label}
@@ -301,11 +297,12 @@ const FloatingInput: React.FC<{
             type={type}
             value={value}
             required={required}
+            placeholder={placeholder}
             onChange={(e) => onChange(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className="w-full bg-transparent border-none outline-none text-white text-[0.88rem] font-medium pt-1"
-            autoComplete={type === 'password' ? 'new-password' : type === 'email' ? 'email' : 'name'}
+            className="w-full bg-transparent border-none outline-none text-white text-[0.88rem] font-medium pt-0.5 placeholder:text-white/20"
+            autoComplete={type === 'password' ? 'new-password' : type === 'email' ? 'email' : 'username'}
           />
         </div>
         <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r from-[#3869D2]/[0.04] to-[#C57CF9]/[0.04] blur-xl pointer-events-none transition-opacity duration-500 ${focused ? 'opacity-100' : 'opacity-0'}`} />
@@ -319,11 +316,10 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register, isLoading, error, clearError } = useAuthStore();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -331,18 +327,27 @@ export default function RegisterPage() {
     clearError();
     setLocalError(null);
 
-    if (!firstName.trim()) {
-      setLocalError('Please enter your first name.');
+    const cleanUsername = username.trim().toLowerCase();
+    if (!cleanUsername || cleanUsername.length < 3) {
+      setLocalError('Username must be at least 3 characters.');
       return;
     }
-    if (!email.trim() || !password) {
-      setLocalError('Please fill in all required fields.');
+
+    if (!/^[a-zA-Z0-9_.-]+$/.test(cleanUsername)) {
+      setLocalError('Username can only contain letters, numbers, underscores, dashes, and periods.');
       return;
     }
+
+    if (!password) {
+      setLocalError('Please enter a password.');
+      return;
+    }
+
     if (password.length < 6) {
       setLocalError('Password must be at least 6 characters.');
       return;
     }
+
     if (password !== confirmPassword) {
       setLocalError('Passwords do not match.');
       return;
@@ -350,10 +355,9 @@ export default function RegisterPage() {
 
     try {
       await register({
-        first_name: firstName.trim(),
-        last_name: lastName.trim() || undefined,
-        email: email.trim(),
+        username: cleanUsername,
         password,
+        email: email.trim() || undefined,
       });
       router.push('/dashboard');
     } catch (err: any) {
@@ -465,58 +469,57 @@ export default function RegisterPage() {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <FloatingInput
-                      id="firstName"
-                      label="First name"
-                      icon="badge"
-                      value={firstName}
-                      onChange={setFirstName}
-                      required
-                    />
-                    <FloatingInput
-                      id="lastName"
-                      label="Last name"
-                      icon="person"
-                      value={lastName}
-                      onChange={setLastName}
-                    />
-                  </div>
-
                   <FloatingInput
-                    id="email"
-                    label="Email address"
-                    type="email"
-                    icon="mail"
-                    value={email}
-                    onChange={setEmail}
+                    id="username"
+                    label="Username *"
+                    icon="alternate_email"
+                    value={username}
+                    onChange={setUsername}
+                    placeholder="e.g. johndoe"
                     required
                   />
 
                   <FloatingInput
                     id="password"
-                    label="Password (min 6 chars)"
+                    label="Password * (min 6 chars)"
                     type="password"
                     icon="lock"
                     value={password}
                     onChange={setPassword}
+                    placeholder="••••••••"
                     required
                   />
 
                   <FloatingInput
                     id="confirmPassword"
-                    label="Confirm password"
+                    label="Confirm password *"
                     type="password"
                     icon="lock_reset"
                     value={confirmPassword}
                     onChange={setConfirmPassword}
+                    placeholder="••••••••"
                     required
                   />
+
+                  <div>
+                    <FloatingInput
+                      id="email"
+                      label="Email / Gmail (Optional)"
+                      type="email"
+                      icon="mail"
+                      value={email}
+                      onChange={setEmail}
+                      placeholder="name@gmail.com (Optional)"
+                    />
+                    <p className="text-[0.68rem] text-white/30 mt-1.5 ml-1">
+                      💡 Email is optional. You can link your Gmail anytime in Settings.
+                    </p>
+                  </div>
 
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`group relative w-full mt-3 py-4 rounded-2xl font-bold text-[0.92rem] text-white tracking-[-0.01em] bg-gradient-to-r from-[#3869D2] to-[#C57CF9] border-none cursor-pointer overflow-hidden transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_8px_40px_rgba(56,105,210,0.3),0_8px_40px_rgba(197,124,249,0.2)] hover:scale-[1.02] active:scale-[0.98] ${
+                    className={`group relative w-full mt-2 py-4 rounded-2xl font-bold text-[0.92rem] text-white tracking-[-0.01em] bg-gradient-to-r from-[#3869D2] to-[#C57CF9] border-none cursor-pointer overflow-hidden transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_8px_40px_rgba(56,105,210,0.3),0_8px_40px_rgba(197,124,249,0.2)] hover:scale-[1.02] active:scale-[0.98] ${
                       isLoading ? 'opacity-70 cursor-not-allowed' : ''
                     }`}
                   >
@@ -528,7 +531,7 @@ export default function RegisterPage() {
                         </>
                       ) : (
                         <>
-                          <span>Get Started</span>
+                          <span>Create Account</span>
                           <span className="material-symbols-rounded text-[20px] transition-transform duration-300 group-hover:translate-x-1">arrow_forward</span>
                         </>
                       )}
@@ -560,6 +563,55 @@ export default function RegisterPage() {
         }
         .register-border-spin {
           animation: borderSpin 12s linear infinite;
+        }
+        .gradient-mesh {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          overflow: hidden;
+        }
+        .mesh-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(120px);
+          opacity: 0.12;
+        }
+        .orb-1 {
+          width: 600px;
+          height: 600px;
+          background: #3869D2;
+          top: -150px;
+          left: -100px;
+          animation: orbFloat1 20s ease-in-out infinite alternate;
+        }
+        .orb-2 {
+          width: 500px;
+          height: 500px;
+          background: #C57CF9;
+          bottom: -100px;
+          right: -100px;
+          animation: orbFloat2 25s ease-in-out infinite alternate;
+        }
+        .orb-3 {
+          width: 400px;
+          height: 400px;
+          background: #34d399;
+          top: 40%;
+          left: 30%;
+          animation: orbFloat3 18s ease-in-out infinite alternate;
+        }
+        @keyframes orbFloat1 {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(80px, 60px); }
+        }
+        @keyframes orbFloat2 {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(-60px, -80px); }
+        }
+        @keyframes orbFloat3 {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(-40px, 40px) scale(1.1); }
         }
       `}</style>
     </div>

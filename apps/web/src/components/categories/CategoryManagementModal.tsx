@@ -5,17 +5,22 @@ import { useCategoryStore } from '@/stores/category-store';
 import { Category } from '@financial-os/shared-types';
 
 interface CategoryManagementModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onOpenAddModal: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onOpenAddModal?: () => void;
 }
 
 export const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
-  isOpen,
-  onClose,
-  onOpenAddModal,
+  isOpen: propsIsOpen,
+  onClose: propsOnClose,
+  onOpenAddModal: propsOnOpenAddModal,
 }) => {
-  const { categories, deleteCategory } = useCategoryStore();
+  const { categories, deleteCategory, isManageModalOpen, closeManageModal, openAddModal } = useCategoryStore();
+
+  const isOpen = propsIsOpen !== undefined ? propsIsOpen : isManageModalOpen;
+  const handleClose = propsOnClose || closeManageModal;
+  const handleOpenAdd = propsOnOpenAddModal || openAddModal;
+
   const [selectedCatToDelete, setSelectedCatToDelete] = useState<Category | null>(null);
   const [reassignTargetId, setReassignTargetId] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -58,7 +63,7 @@ export const CategoryManagementModal: React.FC<CategoryManagementModalProps> = (
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close modal"
             className="w-8 h-8 rounded-full bg-white/[0.04] hover:bg-white/[0.1] text-white/50 hover:text-white flex items-center justify-center transition-all"
           >
@@ -132,8 +137,8 @@ export const CategoryManagementModal: React.FC<CategoryManagementModalProps> = (
               <button
                 type="button"
                 onClick={() => {
-                  onClose();
-                  onOpenAddModal();
+                  handleClose();
+                  handleOpenAdd();
                 }}
                 className="text-[0.72rem] font-semibold text-[#d9a4ff] hover:text-white flex items-center gap-1"
               >
@@ -210,7 +215,7 @@ export const CategoryManagementModal: React.FC<CategoryManagementModalProps> = (
         <div className="pt-4 border-t border-white/[0.06] flex justify-end shrink-0 mt-4">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="px-5 py-2 rounded-[10px] bg-white/[0.06] hover:bg-white/[0.1] text-[0.82rem] font-semibold text-white transition-all"
           >
             Close

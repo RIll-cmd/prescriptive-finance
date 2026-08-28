@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Tuple, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func, or_
 from fastapi import HTTPException, status
 from app.models.user import UserModel
 from app.models.category import CategoryModel
@@ -38,25 +38,41 @@ DEFAULT_CATEGORIES = [
 class AuthService:
     @staticmethod
     async def register(db: AsyncSession, req: RegisterRequest) -> Tuple[UserModel, str, str]:
-        """Registers a new user, seeds default categories, and issues access & refresh tokens."""
-        email_clean = req.email.strip().lower()
+        """Registers a new user with a username and optional email, seeds default categories, and issues tokens."""
+        username_clean = req.username.strip().lower()
         
-        # Check if user already exists
-        query = select(UserModel).where(UserModel.email == email_clean)
-        res = await db.execute(query)
-        if res.scalar_one_or_none():
+        # Check if username already exists
+        query_u = select(UserModel).where(func.lower(UserModel.username) == username_clean)
+        res_u = await db.execute(query_u)
+        if res_u.scalar_one_or_none():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="An account with this email address already exists."
+                detail="An account with this username already exists."
             )
         
+        email_clean: Optional[str] = None
+        if req.email and req.email.strip():
+            email_clean = req.email.strip().lower()
+            query_e = select(UserModel).where(func.lower(UserModel.email) == email_clean)
+            res_e = await db.execute(query_e)
+            if res_e.scalar_one_or_none():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="An account with this email address already exists."
+                )
+        
+        first_name = req.first_name.strip() if req.first_name and req.first_name.strip() else req.username.strip()
+        last_name = req.last_name.strip() if req.last_name and req.last_name.strip() else None
+
         # Create user
         user = UserModel(
+            username=username_clean,
             email=email_clean,
             password_hash=get_password_hash(req.password),
-            first_name=req.first_name.strip(),
-            last_name=req.last_name.strip() if req.last_name else None,
-            avatar_url=f"https://api.dicebear.com/9.x/avataaars/svg?seed={req.first_name.strip()}&backgroundColor=b6e3f4",
+            first_name=first_name,
+            last_name=last_name,
+            currency=req.currency or "PHP",
+            avatar_url=f"https://api.dicebear.com/9.x/avataaars/svg?seed={username_clean}&backgroundColor=b6e3f4",
             is_active=True,
             is_onboarded=False,
             last_login_at=datetime.now(timezone.utc)
@@ -78,7 +94,7 @@ class AuthService:
             db.add(cat_obj)
         
         # Issue tokens
-        access_token = create_access_token(subject=user.id, email=user.email)
+        access_token = create_access_token(subject=user.id, email=user.email, username=user.username)
         refresh_token_raw = create_refresh_token_string()
         
         refresh_obj = RefreshTokenModel(
@@ -95,17 +111,27 @@ class AuthService:
 
     @staticmethod
     async def login(db: AsyncSession, req: LoginRequest) -> Tuple[UserModel, str, str]:
-        """Authenticates user credentials and issues new access and refresh tokens."""
-        email_clean = req.email.strip().lower()
+        """Authenticates user credentials using username or email and issues access/refresh tokens."""
+        identifier_clean = (req.username_or_email or req.email or "").strip().lower()
+        if not identifier_clean:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Please enter your username or email."
+            )
         
-        query = select(UserModel).where(UserModel.email == email_clean)
+        query = select(UserModel).where(
+            or_(
+                func.lower(UserModel.username) == identifier_clean,
+                func.lower(UserModel.email) == identifier_clean
+            )
+        )
         res = await db.execute(query)
         user = res.scalar_one_or_none()
         
         if not user or not verify_password(req.password, user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email address or password.",
+                detail="Invalid username/email or password.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
             
@@ -118,7 +144,7 @@ class AuthService:
         # Update last login
         user.last_login_at = datetime.now(timezone.utc)
         
-        access_token = create_access_token(subject=user.id, email=user.email)
+        access_token = create_access_token(subject=user.id, email=user.email, username=user.username)
         refresh_token_raw = create_refresh_token_string()
         
         refresh_obj = RefreshTokenModel(
@@ -166,7 +192,7 @@ class AuthService:
             )
             
         # Create new tokens
-        new_access_token = create_access_token(subject=user.id, email=user.email)
+        new_access_token = create_access_token(subject=user.id, email=user.email, username=user.username)
         new_refresh_raw = create_refresh_token_string()
         
         new_refresh_record = RefreshTokenModel(

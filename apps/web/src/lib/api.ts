@@ -18,7 +18,10 @@ export async function apiClient<T>(endpoint: string, options: RequestInit = {}):
   // Read stored fallback token if any
   let token: string | null = null;
   if (typeof window !== 'undefined') {
-    token = localStorage.getItem('financial_os_token');
+    token =
+      localStorage.getItem('financial_os_token') ||
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('auth_token');
   }
 
   const headers: Record<string, string> = {

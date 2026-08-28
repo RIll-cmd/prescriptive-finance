@@ -2,8 +2,9 @@
 
 export interface User {
   id: string;
-  email: string;
-  first_name: string;
+  username: string;
+  email?: string | null;
+  first_name?: string | null;
   last_name?: string | null;
   avatar_url?: string | null;
   currency: string;
@@ -588,4 +589,243 @@ export interface CashBalanceForecastResponse {
   reserve_breach_date?: string | null;
   overdraft_date?: string | null;
   forecast_days: number;
+}
+
+// -------------------------------------------------------------
+// Phase 5: Forecasting & What-If Simulator
+// -------------------------------------------------------------
+
+export type ForecastPeriod = 'month_end' | '7_days' | '30_days' | '3_months' | '6_months' | '12_months' | 'custom';
+export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+export type ShortageRiskLevel = 'NONE' | 'LOW_TIMING_RISK' | 'RESERVE_BREACH' | 'CRITICAL_DEFICIT';
+
+export interface IncomeForecastItem {
+  source_name: string;
+  amount: number;
+  expected_date: string;
+  is_guaranteed: boolean;
+}
+
+export interface ExpenseForecastCategory {
+  category_id?: string | null;
+  category_name: string;
+  icon: string;
+  color_hex: string;
+  known_bills_amount: number;
+  estimated_variable_amount: number;
+  total_projected: number;
+  percentage_of_total: number;
+}
+
+export interface ForecastTrajectoryPoint {
+  date: string;
+  day_label: string;
+  projected_balance: number;
+  known_income: number;
+  known_expenses: number;
+  estimated_variable_burn: number;
+  is_below_reserve: boolean;
+  is_negative: boolean;
+  event_description?: string | null;
+}
+
+export interface GoalCompletionForecast {
+  goal_id: string;
+  goal_name: string;
+  target_amount: number;
+  current_amount: number;
+  current_pace_monthly: number;
+  estimated_completion_date?: string | null;
+  target_date?: string | null;
+  delay_months: number;
+  pace_status: string;
+}
+
+export interface ShortageAlert {
+  has_shortage: boolean;
+  risk_level: ShortageRiskLevel;
+  shortfall_amount: number;
+  deficit_date?: string | null;
+  recovery_date?: string | null;
+  title: string;
+  description: string;
+  mitigation_advice?: string | null;
+}
+
+export interface ConfidenceScore {
+  level: ConfidenceLevel;
+  score: number;
+  rationale: string;
+  history_days: number;
+  variance_rating: string;
+}
+
+export interface FinancialForecastResponse {
+  period: ForecastPeriod;
+  period_start: string;
+  period_end: string;
+  total_days: number;
+  current_liquid_balance: number;
+  emergency_reserve_target: number;
+  projected_income: number;
+  projected_known_expenses: number;
+  projected_variable_expenses: number;
+  projected_total_expenses: number;
+  projected_net_savings: number;
+  projected_end_balance: number;
+  confidence: ConfidenceScore;
+  shortage_alert: ShortageAlert;
+  categories: ExpenseForecastCategory[];
+  goals_forecast: GoalCompletionForecast[];
+  trajectory: ForecastTrajectoryPoint[];
+}
+
+export type ScenarioType = 'PURCHASE' | 'INCOME_CHANGE' | 'EXPENSE_CHANGE' | 'SAVINGS_CHANGE' | 'DEBT' | 'CUSTOM';
+export type ScenarioRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface SimulationChangeInput {
+  change_type: string;
+  field_name?: string | null;
+  operation?: string;
+  amount: number;
+  interest_rate?: number | null;
+  term_months?: number | null;
+  start_date: string;
+  end_date?: string | null;
+  category_name?: string | null;
+  metadata_json?: string | null;
+}
+
+export interface RunSimulationRequest {
+  name: string;
+  type: ScenarioType;
+  description?: string | null;
+  changes: SimulationChangeInput[];
+}
+
+export interface LoanAmortizationSummary {
+  principal_amount: number;
+  annual_interest_rate: number;
+  term_months: number;
+  monthly_payment: number;
+  total_repayment: number;
+  total_interest: number;
+}
+
+export interface HealthScoreComponentDiff {
+  current: number;
+  scenario: number;
+  delta: number;
+}
+
+export interface HealthScoreDiff {
+  current_score: number;
+  scenario_score: number;
+  score_delta: number;
+  current_label: string;
+  scenario_label: string;
+  components: Record<string, HealthScoreComponentDiff>;
+}
+
+export interface GoalImpactItem {
+  goal_id: string;
+  goal_name: string;
+  target_amount: number;
+  current_finish_date?: string | null;
+  scenario_finish_date?: string | null;
+  delay_months: number;
+  is_delayed: boolean;
+  required_monthly_current: number;
+  required_monthly_scenario: number;
+}
+
+export interface SimulationSnapshot {
+  liquid_cash: number;
+  emergency_reserve: number;
+  emergency_coverage_months: number;
+  monthly_income: number;
+  monthly_expenses: number;
+  monthly_savings: number;
+  safe_daily_spend: number;
+  health_score: number;
+  health_label: string;
+}
+
+export interface SimulationResultResponse {
+  scenario_name: string;
+  scenario_type: ScenarioType;
+  description?: string | null;
+  baseline: SimulationSnapshot;
+  simulated: SimulationSnapshot;
+  cash_delta: number;
+  emergency_coverage_delta_months: number;
+  safe_daily_spend_delta: number;
+  health_diff: HealthScoreDiff;
+  goals_impact: GoalImpactItem[];
+  loan_summary?: LoanAmortizationSummary | null;
+  risk_level: ScenarioRiskLevel;
+  risk_factors: string[];
+  recommendation_title: string;
+  recommendation_summary: string;
+  key_tradeoffs: string[];
+}
+
+export interface ScenarioComparisonRequest {
+  scenarios: RunSimulationRequest[];
+}
+
+export interface ScenarioComparisonItem {
+  id?: string | null;
+  name: string;
+  type: ScenarioType;
+  cost_or_amount: number;
+  remaining_cash: number;
+  emergency_coverage_months: number;
+  health_score: number;
+  safe_daily_spend: number;
+  goals_delayed_count: number;
+  max_goal_delay_months: number;
+  risk_level: ScenarioRiskLevel;
+  is_recommended: boolean;
+}
+
+export interface ScenarioComparisonResponse {
+  items: ScenarioComparisonItem[];
+  best_for_cash: string;
+  best_for_health: string;
+  best_for_goals: string;
+  overall_recommendation: string;
+}
+
+export interface SavedScenarioChangeResponse {
+  id: string;
+  change_type: string;
+  field_name?: string | null;
+  operation: string;
+  amount: number;
+  interest_rate?: number | null;
+  term_months?: number | null;
+  start_date: string;
+  end_date?: string | null;
+  category_name?: string | null;
+  metadata_json?: string | null;
+  created_at: string;
+}
+
+export interface SavedScenarioResponse {
+  id: string;
+  user_id: string;
+  name: string;
+  type: ScenarioType;
+  description?: string | null;
+  changes: SavedScenarioChangeResponse[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SaveScenarioRequest {
+  name: string;
+  type: ScenarioType;
+  description?: string | null;
+  changes: SimulationChangeInput[];
 }
