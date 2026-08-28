@@ -14,6 +14,12 @@ export interface User {
   last_login_at?: string | null;
 }
 
+export interface AuthResponse {
+  user: User;
+  access_token: string;
+  refresh_token?: string;
+}
+
 export type MoneySourceType = 'CASH' | 'E_WALLET' | 'BANK' | 'CREDIT_CARD' | 'OTHER';
 
 export interface MoneySource {
@@ -80,12 +86,21 @@ export interface Transaction {
   category_color_hex?: string | null;
 }
 
+export interface TransactionListResponse {
+  items: Transaction[];
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_more?: boolean;
+}
+
 export interface CreateTransactionPayload {
-  type: TransactionType;
-  amount: number;
   money_source_id: string;
   destination_money_source_id?: string | null;
   category_id?: string | null;
+  type: TransactionType;
+  amount: number;
   merchant?: string | null;
   description?: string | null;
   transaction_date?: string;
@@ -93,38 +108,32 @@ export interface CreateTransactionPayload {
 }
 
 export interface UpdateTransactionPayload {
-  type?: TransactionType;
-  amount?: number;
   money_source_id?: string;
   destination_money_source_id?: string | null;
   category_id?: string | null;
+  type?: TransactionType;
+  amount?: number;
   merchant?: string | null;
   description?: string | null;
   transaction_date?: string;
 }
 
 export interface BalanceAdjustmentPayload {
-  money_source_id: string;
-  target_balance: number;
+  money_source_id?: string;
+  target_balance?: number;
+  new_balance?: number;
   reason?: string;
 }
 
-export interface TransactionListResponse {
-  items: Transaction[];
-  total_count: number;
-  page: number;
-  limit: number;
-  has_more: boolean;
-}
+// -------------------------------------------------------------
+// Phase 2: Analytics & Trends Types
+// -------------------------------------------------------------
 
 export interface CashFlowSummary {
-  total_money: number;
-  total_income: number;
-  total_expenses: number;
+  income: number;
+  expenses: number;
   net_cash_flow: number;
-  savings_rate_pct: number;
-  period_start?: string | null;
-  period_end?: string | null;
+  savings_rate: number;
 }
 
 export interface CategorySpendingItem {
@@ -134,51 +143,48 @@ export interface CategorySpendingItem {
   color_hex: string;
   amount: number;
   percentage: number;
+  transaction_count: number;
 }
 
 export interface CategorySpendingResponse {
-  period_start?: string | null;
-  period_end?: string | null;
-  total_expenses: number;
+  total_spending: number;
   categories: CategorySpendingItem[];
 }
 
 export interface MonthlyActivityItem {
-  key: string;
-  label: string;
   month: number;
-  year: number;
+  key?: string;
+  label?: string;
+  month_name?: string;
   income: number;
   expense: number;
-  net: number;
+  expenses?: number;
+  net?: number;
 }
 
 export interface MonthlyActivityResponse {
   year: number;
   months: MonthlyActivityItem[];
+  total_income: number;
+  total_expenses: number;
+  total_net: number;
 }
 
 export interface DailySpendingItem {
   date: string;
   amount: number;
-  count: number;
+  transaction_count: number;
 }
 
 export interface DailySpendingResponse {
-  period_start: string;
-  period_end: string;
   days: DailySpendingItem[];
+  total_spending: number;
+  average_daily_spending: number;
 }
 
-export interface AuthResponse {
-  access_token: string;
-  token_type: string;
-  user: User;
-}
-
-// =========================================================
-// Phase 3: Financial Intelligence Types
-// =========================================================
+// -------------------------------------------------------------
+// Phase 3: Financial Intelligence & Diagnostics Engine
+// -------------------------------------------------------------
 
 export interface TrendDelta {
   current: number;
@@ -243,7 +249,7 @@ export interface CategorySpendingDetail {
   percentage_of_total: number;
   absolute_change: number;
   percentage_change?: number | null;
-  direction: 'UP' | 'DOWN' | 'FLAT';
+  direction: string;
   is_significant_change: boolean;
   transaction_count: number;
 }
@@ -368,3 +374,218 @@ export interface FinancialInsightsResponse {
   total_active: number;
 }
 
+// -------------------------------------------------------------
+// Phase 4: Goals + Bills + Safe-to-Spend Decision Engine
+// -------------------------------------------------------------
+
+export type GoalPriority = 'LOW' | 'MEDIUM' | 'HIGH';
+export type GoalStatus = 'ACTIVE' | 'COMPLETED' | 'PAUSED' | 'CANCELLED' | 'OVERDUE';
+export type GoalPaceStatus = 'ON_TRACK' | 'AT_RISK' | 'BEHIND' | 'COMPLETED' | 'OVERDUE';
+
+export interface GoalAnalytics {
+  progress_pct: number;
+  remaining_amount: number;
+  required_monthly_contribution: number;
+  required_weekly_contribution: number;
+  current_pace_monthly: number;
+  pace_status: GoalPaceStatus;
+  pace_ratio_pct: number;
+  estimated_completion_date?: string | null;
+  days_remaining?: number | null;
+}
+
+export interface Goal {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string | null;
+  target_amount: number;
+  current_amount: number;
+  target_date?: string | null;
+  priority: GoalPriority;
+  status: GoalStatus;
+  category?: string | null;
+  color_hex: string;
+  icon: string;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string | null;
+  analytics?: GoalAnalytics | null;
+}
+
+export interface GoalListResponse {
+  items: Goal[];
+  total_target_amount: number;
+  total_current_amount: number;
+  total_required_monthly: number;
+  total_count: number;
+  active_count: number;
+  completed_count: number;
+}
+
+export interface GoalContribution {
+  id: string;
+  goal_id: string;
+  user_id: string;
+  amount: number;
+  contribution_date: string;
+  money_source_id?: string | null;
+  transaction_id?: string | null;
+  note?: string | null;
+  created_at: string;
+}
+
+export interface GoalContributionListResponse {
+  items: GoalContribution[];
+  total_amount: number;
+  total_count: number;
+}
+
+export type BillFrequency = 'ONE_TIME' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+export type BillStatus = 'UPCOMING' | 'DUE' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+
+export interface Bill {
+  id: string;
+  user_id: string;
+  category_id?: string | null;
+  category_name?: string | null;
+  name: string;
+  amount: number;
+  due_date: string;
+  is_recurring: boolean;
+  frequency: BillFrequency;
+  status: BillStatus;
+  auto_record_transaction: boolean;
+  color_hex: string;
+  icon: string;
+  notes?: string | null;
+  days_until_due: number;
+  is_overdue: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpcomingBillsSummary {
+  total_due_next_30d: number;
+  total_due_until_payday: number;
+  bills_count: number;
+  overdue_count: number;
+  overdue_amount: number;
+  next_bill_due?: Bill | null;
+}
+
+export interface BillCalendarItem {
+  date: string;
+  bills: Bill[];
+  total_due: number;
+}
+
+export interface BillListResponse {
+  items: Bill[];
+  summary: UpcomingBillsSummary;
+  total_count: number;
+}
+
+export interface BillPayment {
+  id: string;
+  bill_id: string;
+  user_id: string;
+  amount: number;
+  due_date: string;
+  paid_date: string;
+  money_source_id?: string | null;
+  transaction_id?: string | null;
+  status: string;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface BillPaymentListResponse {
+  items: BillPayment[];
+  total_paid_amount: number;
+  total_count: number;
+}
+
+export type IncomeFrequency = 'MONTHLY' | 'SEMIMONTHLY' | 'BIWEEKLY' | 'WEEKLY' | 'ONE_TIME';
+
+export interface IncomeExpectation {
+  id: string;
+  user_id: string;
+  name: string;
+  amount: number;
+  frequency: IncomeFrequency;
+  payday_day_of_month?: number | null;
+  payday_day_of_week?: number | null;
+  next_expected_date: string;
+  money_source_id?: string | null;
+  money_source_name?: string | null;
+  is_active: boolean;
+  days_until_next: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IncomeExpectationListResponse {
+  items: IncomeExpectation[];
+  total_monthly_expected: number;
+  next_payday_date?: string | null;
+  days_until_next_payday?: number | null;
+  total_count: number;
+}
+
+export interface FinancialSettings {
+  emergency_reserve_amount: number;
+  safe_to_spend_mode: 'UNTIL_PAYDAY' | 'MONTHLY' | 'WEEKLY' | 'DAILY';
+  updated_at: string;
+}
+
+export type SafeToSpendStatus = 'HEALTHY' | 'CAUTION' | 'AT_RISK' | 'UNSAFE';
+export type SpendingPaceStatus = 'UNDER_PACE' | 'ON_PACE' | 'NEAR_LIMIT' | 'OVER_PACE';
+
+export interface SafeToSpendResponse {
+  available_money: number;
+  expected_income: number;
+  upcoming_bills: number;
+  goal_allocations: number;
+  emergency_reserve: number;
+  flexible_cash: number;
+  safe_daily: number;
+  safe_weekly: number;
+  safe_until_payday: number;
+  safe_monthly: number;
+  planning_horizon_days: number;
+  planning_horizon_label: string;
+  next_payday_date?: string | null;
+  days_until_payday?: number | null;
+  status: SafeToSpendStatus;
+  spending_pace: SpendingPaceStatus;
+  current_daily_pace: number;
+  is_shortfall: boolean;
+  shortfall_amount: number;
+  explanation_summary: string;
+  evaluated_at: string;
+}
+
+export interface CashBalanceForecastPoint {
+  date: string;
+  day_label: string;
+  projected_balance: number;
+  event_type?: 'INCOME' | 'BILL' | 'GOAL' | 'DAILY_BURN' | null;
+  event_description?: string | null;
+  event_amount?: number | null;
+  is_below_reserve: boolean;
+  is_negative: boolean;
+}
+
+export interface CashBalanceForecastResponse {
+  timeline: CashBalanceForecastPoint[];
+  starting_balance: number;
+  ending_balance: number;
+  min_projected_balance: number;
+  emergency_reserve: number;
+  has_reserve_breach: boolean;
+  has_overdraft_risk: boolean;
+  reserve_breach_date?: string | null;
+  overdraft_date?: string | null;
+  forecast_days: number;
+}

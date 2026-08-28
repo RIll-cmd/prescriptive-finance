@@ -13,8 +13,11 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', href: '/dashboard' },
+  { label: 'Safe-to-Spend', icon: 'verified_user', href: '/safe-to-spend' },
+  { label: 'Financial Goals', icon: 'flag', href: '/goals' },
+  { label: 'Bills & Obligations', icon: 'receipt_long', href: '/bills' },
   { label: 'Money & Accounts', icon: 'account_balance_wallet', href: '/money' },
-  { label: 'Transactions Ledger', icon: 'receipt_long', href: '/transactions' },
+  { label: 'Transactions Ledger', icon: 'receipt', href: '/transactions' },
   { label: 'Financial Insights', icon: 'analytics', href: '/insights' },
   { label: 'Profile Settings', icon: 'person', href: '/accounts' },
 ];

@@ -8,6 +8,11 @@ import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { AddTransactionModal } from '@/components/transactions/AddTransactionModal';
 import { EditTransactionModal } from '@/components/transactions/EditTransactionModal';
 import { TransactionDetailsModal } from '@/components/transactions/TransactionDetailsModal';
+import { AddGoalModal } from '@/components/goals/AddGoalModal';
+import { ContributeGoalModal } from '@/components/goals/ContributeGoalModal';
+import { AddBillModal } from '@/components/bills/AddBillModal';
+import { PayBillModal } from '@/components/bills/PayBillModal';
+import { SafeToSpendBreakdownModal } from '@/components/safe-to-spend/SafeToSpendBreakdownModal';
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function DashboardLayout({
@@ -39,6 +44,11 @@ export default function DashboardLayout({
       <AddTransactionModal />
       <EditTransactionModal />
       <TransactionDetailsModal />
+      <AddGoalModal />
+      <ContributeGoalModal />
+      <AddBillModal />
+      <PayBillModal />
+      <SafeToSpendBreakdownModal />
 
       {/* Onboarding Wizard for new accounts */}
       {user && !user.is_onboarded && <OnboardingModal />}
