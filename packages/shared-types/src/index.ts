@@ -11,8 +11,22 @@ export interface User {
   timezone: string;
   is_active: boolean;
   is_onboarded: boolean;
+  tutorial_progress?: string;
   created_at: string;
   last_login_at?: string | null;
+}
+
+export interface TutorialProgressResponse {
+  progress: Record<string, boolean>;
+}
+
+export interface TutorialCompletePayload {
+  page: string;
+}
+
+export interface TutorialResetResponse {
+  message: string;
+  progress: Record<string, boolean>;
 }
 
 export interface AuthResponse {
@@ -34,6 +48,12 @@ export interface MoneySource {
   color_hex: string;
   icon: string;
   is_active: boolean;
+  is_default?: boolean;
+  auto_credit_interest?: boolean;
+  interest_rate_pct?: number;
+  interest_frequency?: 'DAILY' | 'MONTHLY';
+  withholding_tax_pct?: number;
+  last_interest_credited_at?: string | null;
   created_at: string;
   updated_at: string;
 }

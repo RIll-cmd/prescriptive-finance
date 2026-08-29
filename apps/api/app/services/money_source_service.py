@@ -1,16 +1,100 @@
 from typing import List, Optional
 from decimal import Decimal
+from datetime import datetime, timezone, date
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, update
 from fastapi import HTTPException, status
 from app.models.money_source import MoneySourceModel
-from app.schemas.money_source import MoneySourceCreate, MoneySourceUpdate, MoneySourceListResponse, MoneySourceResponse
+from app.models.transaction import TransactionModel
+from app.schemas.money_source import (
+    MoneySourceCreate,
+    MoneySourceUpdate,
+    MoneySourceListResponse,
+    MoneySourceResponse,
+    CreditInterestRequest
+)
 
 class MoneySourceService:
     @staticmethod
+    async def process_auto_interest(db: AsyncSession, user_id: str) -> None:
+        """
+        Background/sync evaluator that automatically accrues and credits daily or monthly
+        interest directly into account balances for money sources with auto_credit_interest=True.
+        """
+        query = select(MoneySourceModel).where(
+            and_(
+                MoneySourceModel.user_id == user_id,
+                MoneySourceModel.is_active == True,
+                MoneySourceModel.auto_credit_interest == True,
+                MoneySourceModel.interest_rate_pct > 0,
+                MoneySourceModel.current_balance > 0
+            )
+        )
+        res = await db.execute(query)
+        sources = list(res.scalars().all())
+        
+        now = datetime.now(timezone.utc)
+        today = now.date()
+
+        for s in sources:
+            last_date = s.last_interest_credited_at
+            if not last_date:
+                # If never credited, start from created_at date
+                last_credited = s.created_at.date() if s.created_at else today
+            else:
+                last_credited = last_date.date()
+
+            days_elapsed = (today - last_credited).days
+            if days_elapsed <= 0:
+                continue
+
+            freq = (s.interest_frequency or "DAILY").upper()
+            should_credit = False
+            days_to_credit = 0
+
+            if freq == "DAILY" and days_elapsed >= 1:
+                should_credit = True
+                days_to_credit = days_elapsed
+            elif freq == "MONTHLY" and days_elapsed >= 30:
+                should_credit = True
+                days_to_credit = days_elapsed
+
+            if should_credit and days_to_credit > 0:
+                rate_decimal = Decimal(str(s.interest_rate_pct)) / Decimal("100")
+                tax_decimal = Decimal(str(s.withholding_tax_pct or 20)) / Decimal("100")
+                
+                # Gross = Balance * (Rate / 365) * Days
+                gross = (Decimal(str(s.current_balance)) * rate_decimal * Decimal(days_to_credit)) / Decimal("365")
+                tax = gross * tax_decimal
+                net = gross - tax
+
+                if net >= Decimal("0.01"):
+                    # Credit to balance
+                    s.current_balance = Decimal(str(s.current_balance)) + net
+                    s.last_interest_credited_at = now
+
+                    # Create automated interest transaction
+                    txn = TransactionModel(
+                        user_id=user_id,
+                        money_source_id=s.id,
+                        type="INCOME",
+                        amount=net,
+                        merchant=s.name,
+                        description=f"Auto-credited Interest ({s.interest_rate_pct}% p.a. • Net of {s.withholding_tax_pct}% tax for {days_to_credit} days)",
+                        transaction_date=today,
+                        source="SYSTEM"
+                    )
+                    db.add(txn)
+
+        await db.commit()
+
+    @staticmethod
     async def list_sources(db: AsyncSession, user_id: str) -> MoneySourceListResponse:
-        """Lists all active money sources for the authenticated user and calculates total liquid balance."""
+        """Lists all active money sources for authenticated user, running auto-interest checks first."""
+        # Process any pending auto-interest
+        await MoneySourceService.process_auto_interest(db, user_id)
+
         query = select(MoneySourceModel).where(
             and_(
                 MoneySourceModel.user_id == user_id,
@@ -35,6 +119,7 @@ class MoneySourceService:
                     color_hex="#3869D2",
                     icon="account_balance",
                     is_active=True,
+                    is_default=True,
                 ),
                 MoneySourceModel(
                     id=str(uuid.uuid4()),
@@ -47,6 +132,7 @@ class MoneySourceService:
                     color_hex="#34d399",
                     icon="payments",
                     is_active=True,
+                    is_default=False,
                 ),
                 MoneySourceModel(
                     id=str(uuid.uuid4()),
@@ -59,6 +145,7 @@ class MoneySourceService:
                     color_hex="#06B6D4",
                     icon="smartphone",
                     is_active=True,
+                    is_default=False,
                 ),
             ]
             db.add_all(default_sources)
@@ -66,6 +153,13 @@ class MoneySourceService:
             for s in default_sources:
                 await db.refresh(s)
             items = default_sources
+        else:
+            # Ensure at least one active source is designated as default
+            has_default = any(bool(item.is_default) for item in items)
+            if not has_default and len(items) > 0:
+                items[0].is_default = True
+                await db.commit()
+                await db.refresh(items[0])
 
         total_balance = sum(Decimal(str(item.current_balance)) for item in items) if items else Decimal("0.00")
         
@@ -104,7 +198,12 @@ class MoneySourceService:
             current_balance=req.initial_balance,
             color_hex=req.color_hex,
             icon=req.icon,
-            is_active=True
+            is_active=True,
+            auto_credit_interest=req.auto_credit_interest,
+            interest_rate_pct=req.interest_rate_pct,
+            interest_frequency=req.interest_frequency.upper() if req.interest_frequency else "DAILY",
+            withholding_tax_pct=req.withholding_tax_pct or Decimal("20.00"),
+            last_interest_credited_at=datetime.now(timezone.utc)
         )
         db.add(source)
         await db.commit()
@@ -137,7 +236,7 @@ class MoneySourceService:
         source_id: str,
         req: MoneySourceUpdate
     ) -> MoneySourceModel:
-        """Updates a money source's metadata."""
+        """Updates a money source's metadata & interest settings."""
         source = await MoneySourceService.get_source(db, user_id, source_id)
         
         update_data = req.model_dump(exclude_unset=True)
@@ -179,6 +278,91 @@ class MoneySourceService:
         if "currency" in update_data and update_data["currency"]:
             source.currency = update_data["currency"].upper()
 
+        if "is_default" in update_data and update_data["is_default"] is not None:
+            if update_data["is_default"]:
+                await db.execute(
+                    update(MoneySourceModel)
+                    .where(MoneySourceModel.user_id == user_id)
+                    .values(is_default=False)
+                )
+                source.is_default = True
+            else:
+                source.is_default = False
+
+        if "auto_credit_interest" in update_data and update_data["auto_credit_interest"] is not None:
+            source.auto_credit_interest = update_data["auto_credit_interest"]
+
+        if "interest_rate_pct" in update_data and update_data["interest_rate_pct"] is not None:
+            source.interest_rate_pct = update_data["interest_rate_pct"]
+
+        if "interest_frequency" in update_data and update_data["interest_frequency"]:
+            source.interest_frequency = update_data["interest_frequency"].upper()
+
+        if "withholding_tax_pct" in update_data and update_data["withholding_tax_pct"] is not None:
+            source.withholding_tax_pct = update_data["withholding_tax_pct"]
+
+        await db.commit()
+        await db.refresh(source)
+        return source
+
+    @staticmethod
+    async def set_default_source(db: AsyncSession, user_id: str, source_id: str) -> MoneySourceModel:
+        """Atomically designates a money source as the user's primary/default wallet."""
+        source = await MoneySourceService.get_source(db, user_id, source_id)
+        
+        # Reset all sources for this user to is_default = False
+        await db.execute(
+            update(MoneySourceModel)
+            .where(MoneySourceModel.user_id == user_id)
+            .values(is_default=False)
+        )
+        source.is_default = True
+        
+        await db.commit()
+        await db.refresh(source)
+        return source
+
+    @staticmethod
+    async def credit_manual_interest(
+        db: AsyncSession,
+        user_id: str,
+        source_id: str,
+        req: CreditInterestRequest
+    ) -> MoneySourceModel:
+        """Manually posts interest earnings to a money source on demand."""
+        source = await MoneySourceService.get_source(db, user_id, source_id)
+        
+        # Calculate net if not explicitly specified
+        if req.net_amount is not None and req.net_amount > 0:
+            net_to_add = req.net_amount
+        else:
+            rate_decimal = Decimal(str(source.interest_rate_pct or 0)) / Decimal("100")
+            tax_decimal = Decimal(str(source.withholding_tax_pct or 20)) / Decimal("100")
+            gross = (Decimal(str(source.current_balance)) * rate_decimal) / Decimal("365")
+            tax = gross * tax_decimal
+            net_to_add = gross - tax
+
+        if net_to_add <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Net interest amount must be greater than 0."
+            )
+
+        source.current_balance = Decimal(str(source.current_balance)) + net_to_add
+        source.last_interest_credited_at = datetime.now(timezone.utc)
+
+        # Create income transaction
+        txn = TransactionModel(
+            user_id=user_id,
+            money_source_id=source.id,
+            type="INCOME",
+            amount=net_to_add,
+            merchant=source.name,
+            description=req.description or f"Manual Interest Credited ({source.interest_rate_pct}% p.a.)",
+            transaction_date=datetime.now(timezone.utc).date(),
+            source="MANUAL"
+        )
+        db.add(txn)
         await db.commit()
         await db.refresh(source)
         return source
@@ -189,3 +373,4 @@ class MoneySourceService:
         source = await MoneySourceService.get_source(db, user_id, source_id)
         source.is_active = False
         await db.commit()
+

@@ -80,3 +80,54 @@ async def test_money_sources_crud_and_isolation():
         # Verify count decreased
         list_a_after = await client.get("/api/v1/money-sources/", headers=headers_a)
         assert list_a_after.json()["total_count"] == 1
+
+@pytest.mark.asyncio
+async def test_default_money_source_assignment():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        email = f"def_user_{uuid.uuid4().hex[:8]}@example.com"
+        reg = await client.post("/api/v1/auth/register", json={
+            "email": email,
+            "password": "Password123!",
+            "first_name": "DefaultTestUser"
+        })
+        token = reg.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # User creates 2 sources
+        s1 = await client.post("/api/v1/money-sources/", json={
+            "name": "BPI Savings",
+            "type": "BANK",
+            "initial_balance": 10000.00
+        }, headers=headers)
+        id1 = s1.json()["id"]
+
+        s2 = await client.post("/api/v1/money-sources/", json={
+            "name": "GCash Main",
+            "type": "E_WALLET",
+            "initial_balance": 5000.00
+        }, headers=headers)
+        id2 = s2.json()["id"]
+
+        # Set GCash Main as default
+        set_def_res = await client.post(f"/api/v1/money-sources/{id2}/set-default", headers=headers)
+        assert set_def_res.status_code == 200
+        assert set_def_res.json()["is_default"] is True
+
+        # Fetch list and verify only id2 is default
+        list_res = await client.get("/api/v1/money-sources/", headers=headers)
+        items = list_res.json()["items"]
+        default_items = [item for item in items if item["is_default"] is True]
+        assert len(default_items) == 1
+        assert default_items[0]["id"] == id2
+
+        # Switch default to BPI Savings
+        set_def_res2 = await client.post(f"/api/v1/money-sources/{id1}/set-default", headers=headers)
+        assert set_def_res2.status_code == 200
+        assert set_def_res2.json()["is_default"] is True
+
+        list_res2 = await client.get("/api/v1/money-sources/", headers=headers)
+        items2 = list_res2.json()["items"]
+        default_items2 = [item for item in items2 if item["is_default"] is True]
+        assert len(default_items2) == 1
+        assert default_items2[0]["id"] == id1
+

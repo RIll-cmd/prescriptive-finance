@@ -3,8 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { useSafeToSpendStore, HorizonMode } from '@/stores/safe-to-spend-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useContextualTutorial } from '@/hooks/useContextualTutorial';
 
 export default function SafeToSpendPage() {
+  // Contextual Onboarding for Safe-to-Spend
+  useContextualTutorial('safe-to-spend', 600);
+
   const {
     data,
     forecast,
@@ -87,7 +91,7 @@ export default function SafeToSpendPage() {
         </div>
 
         {/* Horizon Switcher */}
-        <div className="flex items-center gap-1 p-1 bg-white/[0.03] border border-white/[0.06] rounded-[12px] self-start sm:self-auto shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
+        <div data-tour="safe-spend-controls" className="flex items-center gap-1 p-1 bg-white/[0.03] border border-white/[0.06] rounded-[12px] self-start sm:self-auto shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
           {(
             [
               { label: 'Until Payday', value: 'UNTIL_PAYDAY' },
@@ -113,7 +117,7 @@ export default function SafeToSpendPage() {
       </div>
 
       {/* Hero Safe-to-Spend Banner */}
-      <div className="glass-card p-8 rounded-[20px] relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+      <div data-tour="safe-spend-hero" className="glass-card p-8 rounded-[20px] relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
         {/* Glow */}
         <div className="absolute -top-16 -left-16 w-56 h-56 bg-[#34d399]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-16 -right-16 w-56 h-56 bg-[#3869D2]/15 rounded-full blur-3xl pointer-events-none" />

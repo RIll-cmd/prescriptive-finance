@@ -6,6 +6,7 @@ interface AnimatedCardProps {
   cardNumber?: string;
   cardHolder?: string;
   expiry?: string;
+  typeLabel?: string;
   className?: string;
 }
 
@@ -13,6 +14,7 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
   cardNumber = '4218 •••• •••• 1208',
   cardHolder = 'ALYA GARRISON',
   expiry = '09/28',
+  typeLabel,
   className = '',
 }) => {
   const sceneRef = useRef<HTMLDivElement>(null);
@@ -176,7 +178,7 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
             ))}
           </div>
 
-          {/* Bottom Row: Card Holder, Expiry, Visa Logo */}
+          {/* Bottom Row: Card Holder, Type / Expiry, Visa Logo */}
           <div className="card-bottom-row flex items-end justify-between">
             <div className="card-holder-block flex flex-col gap-[1px]">
               <span className="card-label text-[0.5rem] font-semibold tracking-[0.12em] text-white/40 uppercase">
@@ -189,10 +191,10 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
 
             <div className="card-expiry-block flex flex-col gap-[1px]">
               <span className="card-label text-[0.5rem] font-semibold tracking-[0.12em] text-white/40 uppercase">
-                EXPIRES
+                {typeLabel || (/^\d{2}\/\d{2}$/.test(expiry) ? 'EXPIRES' : 'TYPE')}
               </span>
-              <span className="card-expiry-val text-[0.7rem] font-semibold text-white/85 tracking-[0.06em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
-                {expiry}
+              <span className="card-expiry-val text-[0.7rem] font-semibold text-white/85 tracking-[0.06em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)] uppercase">
+                {expiry.replace('_', '-')}
               </span>
             </div>
 

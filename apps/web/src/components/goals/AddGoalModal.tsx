@@ -241,7 +241,7 @@ export const AddGoalModal: React.FC = () => {
                   <span className="material-symbols-rounded text-[14px]">
                     {categoryMode === 'SELECT' ? 'edit' : 'list'}
                   </span>
-                  <span>{categoryMode === 'SELECT' ? 'Type Custom Category' : 'Choose Existing'}</span>
+                  <span>{categoryMode === 'SELECT' ? 'Type Custom' : 'Choose List'}</span>
                 </button>
                 <span className="text-white/20">|</span>
                 <button
@@ -257,33 +257,63 @@ export const AddGoalModal: React.FC = () => {
             {categoryMode === 'SELECT' ? (
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value === '__CUSTOM__') {
+                    setCategoryMode('CUSTOM');
+                  } else if (e.target.value === '__NEW_MODAL__') {
+                    openAddCategoryModal();
+                  } else {
+                    setSelectedCategory(e.target.value);
+                  }
+                }}
                 className="w-full bg-[#0d0d21] border border-white/[0.08] rounded-[10px] px-3.5 py-2.5 text-[0.82rem] font-medium text-white outline-none focus:border-[#C57CF9] transition-all"
               >
                 <option value="">-- No Specific Category --</option>
-                <option value="Savings & Emergency">Savings & Emergency</option>
-                <option value="Investments">Investments</option>
-                <option value="Travel & Vacation">Travel & Vacation</option>
-                <option value="Electronics & Gadgets">Electronics & Gadgets</option>
-                <option value="Vehicle & Transport">Vehicle & Transport</option>
-                <option value="Real Estate & Home">Real Estate & Home</option>
-                <option value="Education & Learning">Education & Learning</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.name}>
-                    {c.name} ({c.type})
-                  </option>
-                ))}
+                <option value="__CUSTOM__" className="text-[#C57CF9] font-bold bg-[#1a0f2e]">
+                  ✨ + Type Custom Category...
+                </option>
+                <option value="__NEW_MODAL__" className="text-[#3869D2] font-bold bg-[#0f1a2e]">
+                  ➕ + Create New Category in Library...
+                </option>
+                <optgroup label="Default Goal Categories" className="bg-[#0f0f24] text-white/60">
+                  <option value="Savings & Emergency" className="text-white">Savings & Emergency</option>
+                  <option value="Investments" className="text-white">Investments</option>
+                  <option value="Travel & Vacation" className="text-white">Travel & Vacation</option>
+                  <option value="Electronics & Gadgets" className="text-white">Electronics & Gadgets</option>
+                  <option value="Vehicle & Transport" className="text-white">Vehicle & Transport</option>
+                  <option value="Real Estate & Home" className="text-white">Real Estate & Home</option>
+                  <option value="Education & Learning" className="text-white">Education & Learning</option>
+                </optgroup>
+                {categories.length > 0 && (
+                  <optgroup label="Your Category Library" className="bg-[#0f0f24] text-white/60">
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.name} className="text-white">
+                        {c.name} ({c.type})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             ) : (
-              <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-[10px] px-3.5 py-2.5 focus-within:border-[#C57CF9] transition-all">
-                <span className="material-symbols-rounded text-[18px] text-[#C57CF9] mr-2">category</span>
-                <input
-                  type="text"
-                  placeholder="e.g. Wedding Fund, Crypto Stash, Gaming Rig"
-                  value={customCategory}
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  className="bg-transparent border-none text-[0.85rem] text-white outline-none w-full placeholder:text-white/30"
-                />
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center bg-white/[0.04] border border-[#C57CF9]/40 rounded-[10px] px-3.5 py-2.5 focus-within:border-[#C57CF9] transition-all">
+                  <span className="material-symbols-rounded text-[18px] text-[#C57CF9] mr-2">edit_note</span>
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Enter custom category (e.g. Wedding Fund, Crypto, Japan Trip)"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className="bg-transparent border-none text-[0.85rem] text-white outline-none w-full placeholder:text-white/30"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCategoryMode('SELECT')}
+                  className="px-3 py-2.5 rounded-[10px] bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white text-[0.75rem] font-semibold transition-all shrink-0"
+                >
+                  List
+                </button>
               </div>
             )}
           </div>
@@ -344,38 +374,46 @@ export const AddGoalModal: React.FC = () => {
             </label>
           )}
 
-          {/* Color & Icon Pickers */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          {/* Color & Icon Pickers - Clean non-overlapping layout */}
+          <div className="space-y-3 pt-1">
             <div>
-              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
+              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-2 block">
                 Theme Color
               </label>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex items-center gap-2.5 flex-wrap">
                 {COLOR_OPTIONS.map((c) => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setColorHex(c)}
                     style={{ backgroundColor: c }}
-                    className={`w-6 h-6 rounded-full transition-transform ${colorHex === c ? 'scale-125 ring-2 ring-white shadow-md' : 'opacity-70 hover:opacity-100'}`}
+                    className={`w-6 h-6 rounded-full transition-all cursor-pointer ${
+                      colorHex === c
+                        ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0d0d21] scale-110 shadow-lg'
+                        : 'opacity-70 hover:opacity-100 hover:scale-105'
+                    }`}
                   />
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
+              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-2 block">
                 Icon
               </label>
-              <div className="flex gap-1.5 flex-wrap">
-                {ICON_OPTIONS.slice(0, 6).map((ic) => (
+              <div className="flex items-center gap-2 flex-wrap">
+                {ICON_OPTIONS.map((ic) => (
                   <button
                     key={ic}
                     type="button"
                     onClick={() => setIcon(ic)}
-                    className={`w-7 h-7 rounded-[6px] flex items-center justify-center text-[16px] transition-all ${icon === ic ? 'bg-white/20 text-white shadow-sm' : 'text-white/40 hover:bg-white/[0.06]'}`}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                      icon === ic
+                        ? 'bg-gradient-to-br from-[#3869D2] to-[#C57CF9] text-white shadow-md scale-105 border border-white/20'
+                        : 'bg-white/[0.04] text-white/50 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white'
+                    }`}
                   >
-                    <span className="material-symbols-rounded text-[16px]">{ic}</span>
+                    <span className="material-symbols-rounded text-[18px]">{ic}</span>
                   </button>
                 ))}
               </div>

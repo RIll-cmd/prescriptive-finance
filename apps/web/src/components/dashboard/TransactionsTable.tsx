@@ -4,12 +4,14 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTransactionStore } from '@/stores/transaction-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useDashboardStore } from '@/stores/dashboard-store';
 import { Transaction } from '@financial-os/shared-types';
 import { transactionsApi } from '@/features/transactions/api';
 
 export const TransactionsTable: React.FC = () => {
   const { openDetailsModal, openAddModal } = useTransactionStore();
   const { user } = useAuthStore();
+  const { toggleWidget } = useDashboardStore();
   const [recentTxns, setRecentTxns] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -45,19 +47,30 @@ export const TransactionsTable: React.FC = () => {
             <button
               onClick={() => openAddModal('EXPENSE')}
               title="Add Transaction"
-              className="w-6 h-6 rounded-[6px] bg-white/[0.04] hover:bg-[#3869D2]/20 text-white/40 hover:text-white flex items-center justify-center transition-all"
+              className="w-6 h-6 rounded-[6px] bg-white/[0.04] hover:bg-[#3869D2]/20 text-white/40 hover:text-white flex items-center justify-center transition-all cursor-pointer border-none"
             >
               <span className="material-symbols-rounded text-[16px]">add</span>
             </button>
           </div>
 
-          <Link
-            href="/transactions"
-            className="inline-flex items-center gap-1 bg-[#C57CF9]/[0.12] border border-[#C57CF9]/30 rounded-full px-3.5 py-1.5 text-[#d9a4ff] text-[0.75rem] font-semibold hover:bg-[#C57CF9]/20 transition-all duration-200"
-          >
-            <span>View all ledger</span>
-            <span className="material-symbols-rounded text-[16px]">arrow_forward</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/transactions"
+              className="inline-flex items-center gap-1 bg-[#C57CF9]/[0.12] border border-[#C57CF9]/30 rounded-full px-3.5 py-1.5 text-[#d9a4ff] text-[0.75rem] font-semibold hover:bg-[#C57CF9]/20 transition-all duration-200"
+            >
+              <span>View all ledger</span>
+              <span className="material-symbols-rounded text-[16px]">arrow_forward</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => toggleWidget('transactions')}
+              title="Hide Transactions from Dashboard"
+              aria-label="Hide Transactions"
+              className="w-7 h-7 rounded-[8px] bg-white/[0.04] hover:bg-white/[0.08] text-white/20 hover:text-white flex items-center justify-center transition-all border border-white/[0.06] cursor-pointer"
+            >
+              <span className="material-symbols-rounded text-[16px]">close</span>
+            </button>
+          </div>
         </div>
 
         {/* Table / List */}

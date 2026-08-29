@@ -290,11 +290,20 @@ export const AddTransactionModal: React.FC = () => {
                 </div>
                 <select
                   value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value === '__NEW__') {
+                      openAddCategoryModal();
+                    } else {
+                      setCategoryId(e.target.value);
+                    }
+                  }}
                   className="w-full bg-[#0d0d21] border border-white/[0.08] rounded-[10px] px-3.5 py-2.5 text-[0.82rem] font-medium text-white outline-none focus:border-[#3869D2] transition-all"
                 >
                   <option value="" className="bg-[#0f0f24] text-white/40">
                     -- Select Category --
+                  </option>
+                  <option value="__NEW__" className="text-[#3869D2] font-bold bg-[#0f1a2e]">
+                    ➕ + Create New Category...
                   </option>
                   {filteredCategories.map((cat) => (
                     <option key={cat.id} value={cat.id} className="bg-[#0f0f24] text-white">

@@ -3,9 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { useGoalStore } from '@/stores/goal-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useContextualTutorial } from '@/hooks/useContextualTutorial';
 import { Goal } from '@financial-os/shared-types';
 
 export default function GoalsPage() {
+  // Contextual Onboarding for Goals
+  useContextualTutorial('goals', 600);
+
   const {
     goals,
     summary,
@@ -75,8 +79,9 @@ export default function GoalsPage() {
 
         <button
           type="button"
+          data-tour="goals-new"
           onClick={openAddModal}
-          className="px-4 py-2.5 rounded-[12px] bg-gradient-to-r from-[#3869D2] to-[#C57CF9] text-white text-[0.85rem] font-bold shadow-[0_4px_16px_rgba(197,124,249,0.3)] hover:opacity-95 transition-all flex items-center gap-2 self-start sm:self-auto"
+          className="px-4 py-2.5 rounded-[12px] bg-gradient-to-r from-[#3869D2] to-[#C57CF9] text-white text-[0.85rem] font-bold shadow-[0_4px_16px_rgba(197,124,249,0.3)] hover:opacity-95 transition-all flex items-center gap-2 self-start sm:self-auto cursor-pointer border-none"
         >
           <span className="material-symbols-rounded text-[18px]">add</span>
           <span>New Goal</span>
@@ -84,7 +89,7 @@ export default function GoalsPage() {
       </div>
 
       {/* Summary KPI Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+      <div data-tour="goals-kpi" className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
         <div className="glass-card p-4 rounded-[14px]">
           <span className="text-[0.7rem] font-bold text-white/40 uppercase tracking-wider block mb-1">Total Saved</span>
           <span className="text-[1.3rem] font-black text-white tabular-nums">
@@ -134,7 +139,7 @@ export default function GoalsPage() {
 
       {/* Goals Grid */}
       {filteredGoals.length === 0 ? (
-        <div className="glass-card p-12 text-center flex flex-col items-center justify-center gap-3 text-white/30 rounded-[18px]">
+        <div data-tour="goals-grid" className="glass-card p-12 text-center flex flex-col items-center justify-center gap-3 text-white/30 rounded-[18px]">
           <span className="material-symbols-rounded text-[48px] text-white/10">flag</span>
           <p className="text-[0.95rem]">No goals found in this view.</p>
           <button
@@ -146,7 +151,7 @@ export default function GoalsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div data-tour="goals-grid" className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredGoals.map((goal) => {
             const pace = getPaceBadge(goal.analytics?.pace_status);
             const progress = goal.analytics?.progress_pct || 0;

@@ -4,10 +4,12 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useSafeToSpendStore } from '@/stores/safe-to-spend-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useDashboardStore } from '@/stores/dashboard-store';
 
 export const SafeToSpendWidget: React.FC = () => {
   const { data, fetchSafeToSpend, openBreakdownModal, isLoading } = useSafeToSpendStore();
   const { user } = useAuthStore();
+  const { toggleWidget } = useDashboardStore();
 
   useEffect(() => {
     fetchSafeToSpend();
@@ -44,9 +46,20 @@ export const SafeToSpendWidget: React.FC = () => {
             <span className="material-symbols-rounded text-[20px] text-[#34d399]">verified_user</span>
             <h2 className="text-[0.95rem] font-bold text-white/90 tracking-tight">Safe-to-Spend</h2>
           </div>
-          <span className={`px-2 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider border ${statusInfo.class}`}>
-            {statusInfo.label}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className={`px-2 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wider border ${statusInfo.class}`}>
+              {statusInfo.label}
+            </span>
+            <button
+              type="button"
+              onClick={() => toggleWidget('safe_to_spend')}
+              title="Hide Safe-to-Spend from Dashboard"
+              aria-label="Hide Safe-to-Spend"
+              className="w-6 h-6 rounded-[6px] text-white/20 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all border-none bg-transparent cursor-pointer"
+            >
+              <span className="material-symbols-rounded text-[16px]">close</span>
+            </button>
+          </div>
         </div>
 
         {/* Hero Amount */}

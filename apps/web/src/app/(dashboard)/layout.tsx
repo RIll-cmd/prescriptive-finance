@@ -16,7 +16,10 @@ import { SafeToSpendBreakdownModal } from '@/components/safe-to-spend/SafeToSpen
 import { AddMoneySourceModal } from '@/components/money/AddMoneySourceModal';
 import { AddCategoryModal } from '@/components/categories/AddCategoryModal';
 import { CategoryManagementModal } from '@/components/categories/CategoryManagementModal';
+import { CustomizeDashboardModal } from '@/components/dashboard/CustomizeDashboardModal';
+import { TutorialOverlay } from '@/components/onboarding/TutorialOverlay';
 import { useAuthStore } from '@/stores/auth-store';
+import { useTutorialStore } from '@/stores/tutorial-store';
 
 export default function DashboardLayout({
   children,
@@ -24,10 +27,17 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, checkAuth } = useAuthStore();
+  const { fetchProgress } = useTutorialStore();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    if (user) {
+      fetchProgress();
+    }
+  }, [user, fetchProgress]);
 
   return (
     <div className="relative min-h-screen bg-black text-white flex">
@@ -55,6 +65,8 @@ export default function DashboardLayout({
       <AddMoneySourceModal />
       <AddCategoryModal />
       <CategoryManagementModal />
+      <CustomizeDashboardModal />
+      <TutorialOverlay />
 
       {/* Onboarding Wizard for new accounts */}
       {user && !user.is_onboarded && <OnboardingModal />}

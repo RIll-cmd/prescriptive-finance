@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAnalyticsStore } from '@/stores/analytics-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useDashboardStore } from '@/stores/dashboard-store';
 import { MonthlyActivityItem } from '@financial-os/shared-types';
 
 export const ActivityChart: React.FC = () => {
   const { monthlyActivity, selectedYear, fetchMonthlyActivity, setSelectedYear } =
     useAnalyticsStore();
   const { user } = useAuthStore();
+  const { toggleWidget } = useDashboardStore();
 
   const [activeMonth, setActiveMonth] = useState<MonthlyActivityItem | null>(null);
   const [animated, setAnimated] = useState(false);
@@ -63,6 +65,15 @@ export const ActivityChart: React.FC = () => {
               className="w-6 h-6 rounded-full bg-white/[0.04] hover:bg-white/[0.1] text-white/40 hover:text-white flex items-center justify-center transition-all"
             >
               <span className="material-symbols-rounded text-[14px]">chevron_right</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleWidget('activity')}
+              title="Hide Cash Flow Activity from Dashboard"
+              aria-label="Hide Cash Flow Activity"
+              className="w-6 h-6 rounded-[6px] text-white/20 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all border-none bg-transparent cursor-pointer ml-1"
+            >
+              <span className="material-symbols-rounded text-[16px]">close</span>
             </button>
           </div>
         </div>

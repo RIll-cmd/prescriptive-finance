@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useTransactionStore } from '@/stores/transaction-store';
+import { useDashboardStore } from '@/stores/dashboard-store';
 
 export const FastTransfer: React.FC = () => {
   const { moneySources, user } = useAuthStore();
   const { createTransaction } = useTransactionStore();
+  const { toggleWidget } = useDashboardStore();
 
   const [fromSourceId, setFromSourceId] = useState<string>('');
   const [toSourceId, setToSourceId] = useState<string>('');
@@ -85,9 +87,20 @@ export const FastTransfer: React.FC = () => {
           <h2 className="text-[0.95rem] font-semibold text-white/70 tracking-[-0.01em]">
             Quick Transfer
           </h2>
-          <span className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em]">
-            Zero Fees
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em]">
+              Zero Fees
+            </span>
+            <button
+              type="button"
+              onClick={() => toggleWidget('transfer')}
+              title="Hide Quick Transfer from Dashboard"
+              aria-label="Hide Quick Transfer"
+              className="w-6 h-6 rounded-[6px] text-white/20 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all border-none bg-transparent cursor-pointer"
+            >
+              <span className="material-symbols-rounded text-[16px]">close</span>
+            </button>
+          </div>
         </div>
 
         {/* Quick Amount Buttons */}

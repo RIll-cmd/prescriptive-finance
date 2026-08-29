@@ -136,8 +136,8 @@ const FloatingCard: React.FC = () => {
               <span className="text-[0.78rem] font-semibold text-white/90 tracking-[0.05em] uppercase">FINANCIAL OS</span>
             </div>
             <div className="flex flex-col gap-[1px]">
-              <span className="text-[0.52rem] font-semibold tracking-[0.12em] text-white/40 uppercase">Expires</span>
-              <span className="text-[0.78rem] font-semibold text-white/90 tracking-[0.05em]">12/29</span>
+              <span className="text-[0.52rem] font-semibold tracking-[0.12em] text-white/40 uppercase">Engine</span>
+              <span className="text-[0.78rem] font-semibold text-white/90 tracking-[0.05em]">CIEL 2.0</span>
             </div>
             <svg viewBox="0 0 100 32" width="64" height="22" fill="white" className="opacity-80">
               <path d="M40.4 1.2L35.2 30.8H29L34.2 1.2H40.4ZM67.2 20.2L70 12.2L71.6 20.2H67.2ZM73.4 30.8H79L74.2 1.2H68.8C67.4 1.2 66.2 2 65.6 3.2L56 30.8H62.2L63.4 27.2H71L71.8 30.8H73.4ZM56.8 21C56.8 13.4 46.2 13 46.2 9.6C46.2 8.4 47.4 7.2 49.8 6.8C51 6.6 54.2 6.6 57.8 8.2L59 2.2C57 1.4 54.6 0.8 51.6 0.8C45.8 0.8 41.6 4 41.6 8.6C41.6 12 44.6 13.8 46.8 15C49.2 16.2 50 17 50 18.2C50 20 47.8 20.8 45.8 20.8C41.8 20.8 39.6 19.8 37.8 19L36.6 25.2C38.6 26 41.6 26.8 44.8 26.8C51 26.8 55 23.8 56.8 21ZM27 1.2L17.4 30.8H11L6.2 5.6C5.8 4 5.6 3.4 4 2.4C1.4 1.2 0 0.8 0 0.8L0.2 0H10C11.6 0 13 1 13.4 2.8L15.6 18.6L21.6 1.2H27Z" />
@@ -319,11 +319,16 @@ const FloatingInput: React.FC<{
 /* ─── Main Login Page ─── */
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login, error, clearError } = useAuthStore();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -335,11 +340,14 @@ export default function LoginPage() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       await login({ username_or_email: identifier.trim(), password });
       router.push('/dashboard');
     } catch (err: any) {
       setLocalError(err?.message || 'Failed to sign in. Please check your credentials.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -484,13 +492,13 @@ export default function LoginPage() {
 
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                     className={`group relative w-full mt-3 py-4 rounded-2xl font-bold text-[0.92rem] text-white tracking-[-0.01em] bg-gradient-to-r from-[#3869D2] to-[#C57CF9] border-none cursor-pointer overflow-hidden transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_8px_40px_rgba(56,105,210,0.3),0_8px_40px_rgba(197,124,249,0.2)] hover:scale-[1.02] active:scale-[0.98] ${
-                      isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                      isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
                     }`}
                   >
                     <span className="relative z-[2] flex items-center justify-center gap-2">
-                      {isLoading ? (
+                      {isSubmitting ? (
                         <>
                           <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                           <span>Signing in...</span>

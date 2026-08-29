@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 import { User, MoneySource } from '@financial-os/shared-types';
 import { authApi, RegisterPayload, LoginPayload, UserUpdatePayload } from '@/features/auth/api';
-import { moneySourcesApi, CreateMoneySourcePayload } from '@/features/accounts/api';
+import {
+  moneySourcesApi,
+  CreateMoneySourcePayload,
+  UpdateMoneySourcePayload,
+  CreditInterestPayload,
+} from '@/features/accounts/api';
 
 interface AuthState {
   user: User | null;
@@ -23,6 +28,9 @@ interface AuthState {
   // Money sources actions
   fetchMoneySources: () => Promise<void>;
   addMoneySource: (payload: CreateMoneySourcePayload) => Promise<MoneySource>;
+  updateMoneySource: (id: string, payload: UpdateMoneySourcePayload) => Promise<MoneySource>;
+  setDefaultMoneySource: (id: string) => Promise<void>;
+  creditMoneySourceInterest: (id: string, payload?: CreditInterestPayload) => Promise<MoneySource>;
   deleteMoneySource: (id: string) => Promise<void>;
   completeOnboarding: (name: string, currency: string, initialSources: CreateMoneySourcePayload[]) => Promise<void>;
   openAddSourceModal: () => void;
@@ -32,7 +40,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
   moneySources: [],
   totalBalance: 0,
   error: null,
@@ -141,6 +149,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return newSource;
     } catch (err: any) {
       set({ error: err.message || 'Failed to add money source' });
+      throw err;
+    }
+  },
+
+  updateMoneySource: async (id: string, payload: UpdateMoneySourcePayload) => {
+    try {
+      const updated = await moneySourcesApi.update(id, payload);
+      await get().fetchMoneySources();
+      return updated;
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to update money source' });
+      throw err;
+    }
+  },
+
+  setDefaultMoneySource: async (id: string) => {
+    try {
+      // Optimistically update local moneySources
+      const currentSources = get().moneySources;
+      set({
+        moneySources: currentSources.map((s) => ({
+          ...s,
+          is_default: s.id === id,
+        })),
+      });
+      await moneySourcesApi.setDefault(id);
+      await get().fetchMoneySources();
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to set default wallet' });
+      await get().fetchMoneySources();
+      throw err;
+    }
+  },
+
+  creditMoneySourceInterest: async (id: string, payload?: CreditInterestPayload) => {
+    try {
+      const updated = await moneySourcesApi.creditInterest(id, payload);
+      await get().fetchMoneySources();
+      return updated;
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to credit interest' });
       throw err;
     }
   },

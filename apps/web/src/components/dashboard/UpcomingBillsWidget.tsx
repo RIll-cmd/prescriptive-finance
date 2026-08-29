@@ -4,10 +4,12 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useBillStore } from '@/stores/bill-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useDashboardStore } from '@/stores/dashboard-store';
 
 export const UpcomingBillsWidget: React.FC = () => {
   const { bills, summary, fetchBills, openAddModal, openPayModal, isLoading } = useBillStore();
   const { user } = useAuthStore();
+  const { toggleWidget } = useDashboardStore();
 
   useEffect(() => {
     fetchBills();
@@ -33,7 +35,7 @@ export const UpcomingBillsWidget: React.FC = () => {
               onClick={openAddModal}
               title="Add New Bill"
               aria-label="Add bill"
-              className="w-7 h-7 rounded-[6px] bg-transparent border-none text-white/40 hover:text-[#3869D2] hover:bg-[#3869D2]/[0.06] hover:scale-110 flex items-center justify-center transition-all duration-200"
+              className="w-7 h-7 rounded-[6px] bg-transparent border-none text-white/40 hover:text-[#3869D2] hover:bg-[#3869D2]/[0.06] hover:scale-110 flex items-center justify-center transition-all duration-200 cursor-pointer"
             >
               <span className="material-symbols-rounded text-[20px]">add_circle</span>
             </button>
@@ -45,6 +47,15 @@ export const UpcomingBillsWidget: React.FC = () => {
             >
               <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => toggleWidget('bills')}
+              title="Hide Upcoming Bills from Dashboard"
+              aria-label="Hide Upcoming Bills"
+              className="w-7 h-7 rounded-[6px] bg-transparent border-none text-white/20 hover:text-white hover:bg-white/[0.06] flex items-center justify-center transition-all duration-200 cursor-pointer"
+            >
+              <span className="material-symbols-rounded text-[16px]">close</span>
+            </button>
           </div>
         </div>
 

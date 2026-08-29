@@ -3,11 +3,13 @@
 import React, { useEffect } from 'react';
 import { useForecastStore } from '@/stores/forecast-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useDashboardStore } from '@/stores/dashboard-store';
 import { ForecastPeriod } from '@financial-os/shared-types';
 
 export const ForecastSummaryWidget: React.FC = () => {
   const { user } = useAuthStore();
   const { forecast, period, setPeriod, fetchForecast, isLoading } = useForecastStore();
+  const { toggleWidget } = useDashboardStore();
 
   const currencySymbol = user?.currency === 'PHP' ? '₱' : '$';
 
@@ -67,22 +69,33 @@ export const ForecastSummaryWidget: React.FC = () => {
           </p>
         </div>
 
-        {/* Period Selector Pills */}
-        <div className="flex items-center gap-1 p-1 rounded-[10px] bg-white/[0.04] border border-white/[0.08] self-end sm:self-auto">
-          {periods.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1 rounded-[7px] text-[0.72rem] font-bold transition-all ${
-                period === p.key
-                  ? 'bg-[#3869D2] text-white shadow-[0_0_12px_rgba(56,105,210,0.5)]'
-                  : 'text-white/40 hover:text-white hover:bg-white/[0.04]'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+        {/* Period Selector Pills & Hide Button */}
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex items-center gap-1 p-1 rounded-[10px] bg-white/[0.04] border border-white/[0.08]">
+            {periods.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setPeriod(p.key)}
+                className={`px-3 py-1 rounded-[7px] text-[0.72rem] font-bold transition-all ${
+                  period === p.key
+                    ? 'bg-[#3869D2] text-white shadow-[0_0_12px_rgba(56,105,210,0.5)]'
+                    : 'text-white/40 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => toggleWidget('forecast')}
+            title="Hide Forecast from Dashboard"
+            aria-label="Hide Forecast"
+            className="w-7 h-7 rounded-[8px] bg-white/[0.04] hover:bg-white/[0.08] text-white/20 hover:text-white flex items-center justify-center transition-all border border-white/[0.06] cursor-pointer"
+          >
+            <span className="material-symbols-rounded text-[16px]">close</span>
+          </button>
         </div>
       </div>
 

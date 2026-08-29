@@ -11,7 +11,7 @@ import {
 import { simulatorApi } from '@/features/simulator/api';
 
 interface SimulatorState {
-  activeTab: 'SIMULATE' | 'COMPARE' | 'FORECAST' | 'SAVED';
+  activeTab: 'SIMULATE' | 'INTEREST' | 'COMPARE' | 'FORECAST' | 'SAVED';
   activeScenarioType: ScenarioType;
   
   currentSimulation: SimulationResultResponse | null;
@@ -23,7 +23,7 @@ interface SimulatorState {
   isSaving: boolean;
   error: string | null;
 
-  setActiveTab: (tab: 'SIMULATE' | 'COMPARE' | 'FORECAST' | 'SAVED') => void;
+  setActiveTab: (tab: 'SIMULATE' | 'INTEREST' | 'COMPARE' | 'FORECAST' | 'SAVED') => void;
   setActiveScenarioType: (type: ScenarioType) => void;
   
   runSimulation: (payload: RunSimulationRequest) => Promise<SimulationResultResponse | null>;

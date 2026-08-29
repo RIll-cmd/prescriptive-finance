@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { AnimatedCard } from '../ui/AnimatedCard';
 import { useAuthStore } from '@/stores/auth-store';
 import { useTransactionStore } from '@/stores/transaction-store';
+import { useDashboardStore } from '@/stores/dashboard-store';
 import { AdjustBalanceModal } from '../money/AdjustBalanceModal';
 
 export const BalanceCard: React.FC = () => {
   const { user, totalBalance, moneySources } = useAuthStore();
   const { openAddModal } = useTransactionStore();
+  const { toggleWidget } = useDashboardStore();
   const [balance, setBalance] = useState<number>(0);
   const [activeSourceIndex, setActiveSourceIndex] = useState<number>(0);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
@@ -56,7 +58,7 @@ export const BalanceCard: React.FC = () => {
                 onClick={() => openAddModal('INCOME')}
                 title="Add Income"
                 aria-label="Add income"
-                className="w-7 h-7 rounded-[6px] bg-transparent border-none text-white/30 hover:text-[#34d399] hover:bg-[#34d399]/[0.06] hover:scale-110 flex items-center justify-center transition-all duration-200"
+                className="w-7 h-7 rounded-[6px] bg-transparent border-none text-white/30 hover:text-[#34d399] hover:bg-[#34d399]/[0.06] hover:scale-110 flex items-center justify-center transition-all duration-200 cursor-pointer"
               >
                 <span className="material-symbols-rounded text-[20px]">add_circle</span>
               </button>
@@ -64,9 +66,18 @@ export const BalanceCard: React.FC = () => {
                 onClick={() => setIsAdjustModalOpen(true)}
                 title="Reconcile / Adjust Balance"
                 aria-label="Reconcile balance"
-                className="w-7 h-7 rounded-[6px] bg-transparent border-none text-white/30 hover:text-[#C57CF9] hover:bg-[#C57CF9]/[0.06] hover:scale-110 flex items-center justify-center transition-all duration-200"
+                className="w-7 h-7 rounded-[6px] bg-transparent border-none text-white/30 hover:text-[#C57CF9] hover:bg-[#C57CF9]/[0.06] hover:scale-110 flex items-center justify-center transition-all duration-200 cursor-pointer"
               >
                 <span className="material-symbols-rounded text-[18px]">tune</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleWidget('balance')}
+                title="Hide Balance Card from Dashboard"
+                aria-label="Hide Balance Card"
+                className="w-7 h-7 rounded-[6px] bg-transparent border-none text-white/20 hover:text-white hover:bg-white/[0.06] flex items-center justify-center transition-all duration-200 cursor-pointer"
+              >
+                <span className="material-symbols-rounded text-[16px]">close</span>
               </button>
             </div>
           </div>
@@ -90,7 +101,8 @@ export const BalanceCard: React.FC = () => {
                 : '4218 •••• •••• 1208'
             }
             cardHolder={cardHolderName}
-            expiry={activeSource ? activeSource.type : '09/28'}
+            typeLabel={activeSource ? 'TYPE' : 'STATUS'}
+            expiry={activeSource ? activeSource.type.replace('_', '-') : 'ACTIVE'}
           />
 
           {/* Bottom Row */}

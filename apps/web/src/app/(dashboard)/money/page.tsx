@@ -5,6 +5,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useTransactionStore } from '@/stores/transaction-store';
 import { useCategoryStore } from '@/stores/category-store';
 import { AdjustBalanceModal } from '@/components/money/AdjustBalanceModal';
+import { EditMoneySourceModal } from '@/components/money/EditMoneySourceModal';
+import { RecordInterestModal } from '@/components/money/RecordInterestModal';
 import { MoneySource } from '@financial-os/shared-types';
 
 export default function MoneyPage() {
@@ -15,11 +17,27 @@ export default function MoneyPage() {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [selectedSourceForAdjust, setSelectedSourceForAdjust] = useState<MoneySource | null>(null);
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedSourceForEdit, setSelectedSourceForEdit] = useState<MoneySource | null>(null);
+
+  const [isInterestModalOpen, setIsInterestModalOpen] = useState(false);
+  const [selectedSourceForInterest, setSelectedSourceForInterest] = useState<MoneySource | null>(null);
+
   const currencySymbol = user?.currency === 'PHP' ? '₱' : '$';
 
   const handleOpenAdjust = (source: MoneySource) => {
     setSelectedSourceForAdjust(source);
     setIsAdjustModalOpen(true);
+  };
+
+  const handleOpenEdit = (source: MoneySource) => {
+    setSelectedSourceForEdit(source);
+    setIsEditModalOpen(true);
+  };
+
+  const handleOpenInterest = (source: MoneySource) => {
+    setSelectedSourceForInterest(source);
+    setIsInterestModalOpen(true);
   };
 
   return (
@@ -31,14 +49,14 @@ export default function MoneyPage() {
             Money & Accounts
           </h1>
           <p className="text-[0.82rem] text-white/40 mt-0.5">
-            Manage your liquid wallets, bank accounts, and custom spending categories
+            Manage your liquid wallets, high-yield digital banks, and automated interest rules
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
             onClick={openManageModal}
-            className="px-4 py-2.5 rounded-[12px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white font-semibold text-[0.82rem] transition-all flex items-center gap-2"
+            className="px-4 py-2.5 rounded-[12px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white font-semibold text-[0.82rem] transition-all flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-rounded text-[18px] text-[#d9a4ff]">tune</span>
             <span>Categories</span>
@@ -77,7 +95,7 @@ export default function MoneyPage() {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => openAddModal('TRANSFER')}
-              className="px-4 py-2.5 rounded-[10px] bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold text-[0.82rem] transition-all flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-[10px] bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold text-[0.82rem] transition-all flex items-center gap-1.5 cursor-pointer border border-white/[0.06]"
             >
               <span className="material-symbols-rounded text-[18px] text-[#C57CF9]">sync_alt</span>
               <span>Transfer Between Accounts</span>
@@ -87,7 +105,7 @@ export default function MoneyPage() {
                 setSelectedSourceForAdjust(null);
                 setIsAdjustModalOpen(true);
               }}
-              className="px-4 py-2.5 rounded-[10px] bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold text-[0.82rem] transition-all flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-[10px] bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold text-[0.82rem] transition-all flex items-center gap-1.5 cursor-pointer border border-white/[0.06]"
             >
               <span className="material-symbols-rounded text-[18px] text-amber-400">tune</span>
               <span>Reconcile Balance</span>
@@ -98,9 +116,14 @@ export default function MoneyPage() {
 
       {/* Money Sources Grid */}
       <div className="space-y-4">
-        <h2 className="text-[1.1rem] font-bold tracking-tight text-white/90">
-          Active Accounts & Wallets
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-[1.1rem] font-bold tracking-tight text-white/90">
+            Active Accounts & Wallets
+          </h2>
+          <span className="text-[0.72rem] text-white/40">
+            Click any account card to manage interest rules or post manual yield
+          </span>
+        </div>
 
         {moneySources.length === 0 ? (
           <div className="glass-card p-12 text-center flex flex-col items-center justify-center gap-3">
@@ -110,7 +133,7 @@ export default function MoneyPage() {
             <p className="text-[0.9rem] font-semibold text-white/70">No money sources added</p>
             <button
               onClick={openAddSourceModal}
-              className="px-4 py-2 rounded-[10px] bg-[#3869D2] text-white text-[0.8rem] font-bold"
+              className="px-4 py-2 rounded-[10px] bg-[#3869D2] text-white text-[0.8rem] font-bold cursor-pointer border-none"
             >
               + Create First Account
             </button>
@@ -118,6 +141,9 @@ export default function MoneyPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {moneySources.map((source) => {
+              const hasInterest = (source.interest_rate_pct && source.interest_rate_pct > 0) || source.auto_credit_interest;
+              const isAuto = Boolean(source.auto_credit_interest);
+
               return (
                 <div
                   key={source.id}
@@ -131,7 +157,7 @@ export default function MoneyPage() {
 
                   {/* Card Top */}
                   <div>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div
                           className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 shadow-sm"
@@ -154,14 +180,44 @@ export default function MoneyPage() {
                         </div>
                       </div>
 
-                      <span className="text-[0.68rem] font-bold uppercase px-2.5 py-0.5 rounded-full bg-white/[0.04] text-white/50 border border-white/[0.06]">
-                        {source.currency}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[0.68rem] font-bold uppercase px-2 py-0.5 rounded-full bg-white/[0.04] text-white/50 border border-white/[0.06]">
+                          {source.currency}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(source)}
+                          title="Account settings & interest rules"
+                          className="w-7 h-7 rounded-[6px] text-white/30 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all cursor-pointer border-none bg-transparent"
+                        >
+                          <span className="material-symbols-rounded text-[16px]">settings</span>
+                        </button>
+                      </div>
                     </div>
 
+                    {/* Interest / Yield Status Pill */}
+                    {hasInterest && (
+                      <div className="mb-3 flex items-center gap-1.5">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[0.68rem] font-bold border ${
+                            isAuto
+                              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                              : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+                          }`}
+                        >
+                          <span className="material-symbols-rounded text-[13px]">
+                            {isAuto ? 'bolt' : 'payments'}
+                          </span>
+                          <span>
+                            {source.interest_rate_pct}% p.a. • {isAuto ? `Auto-${source.interest_frequency || 'DAILY'}` : 'Manual Entry'}
+                          </span>
+                        </span>
+                      </div>
+                    )}
+
                     {/* Balance */}
-                    <div className="my-3">
-                      <span className="text-[0.72rem] font-semibold text-white/40 uppercase tracking-[0.06em] block mb-0.5">
+                    <div className="my-2">
+                      <span className="text-[0.70rem] font-semibold text-white/40 uppercase tracking-[0.06em] block mb-0.5">
                         Current Balance
                       </span>
                       <div className="flex items-baseline">
@@ -178,26 +234,37 @@ export default function MoneyPage() {
 
                   {/* Card Actions Footer */}
                   <div className="pt-3 mt-3 border-t border-white/[0.06] flex items-center justify-between">
-                    <button
-                      onClick={() => handleOpenAdjust(source)}
-                      className="text-[0.75rem] font-semibold text-amber-400/90 hover:text-amber-300 flex items-center gap-1 transition-colors"
-                    >
-                      <span className="material-symbols-rounded text-[15px]">tune</span>
-                      <span>Adjust</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenAdjust(source)}
+                        className="text-[0.72rem] font-semibold text-amber-400/90 hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer bg-transparent border-none p-0"
+                      >
+                        <span className="material-symbols-rounded text-[14px]">tune</span>
+                        <span>Adjust</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleOpenInterest(source)}
+                        title="Record or compute earned interest"
+                        className="text-[0.72rem] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors cursor-pointer bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/20"
+                      >
+                        <span className="material-symbols-rounded text-[14px]">calculate</span>
+                        <span>Credit Interest</span>
+                      </button>
+                    </div>
 
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => openAddModal('EXPENSE')}
                         title="Record Expense from this source"
-                        className="w-7 h-7 rounded-[6px] bg-white/[0.04] hover:bg-white/[0.1] text-white/50 hover:text-white flex items-center justify-center transition-all"
+                        className="w-7 h-7 rounded-[6px] bg-white/[0.04] hover:bg-white/[0.1] text-white/50 hover:text-white flex items-center justify-center transition-all cursor-pointer border-none"
                       >
                         <span className="material-symbols-rounded text-[16px]">remove</span>
                       </button>
                       <button
                         onClick={() => openAddModal('INCOME')}
                         title="Record Income to this source"
-                        className="w-7 h-7 rounded-[6px] bg-white/[0.04] hover:bg-white/[0.1] text-white/50 hover:text-emerald-400 flex items-center justify-center transition-all"
+                        className="w-7 h-7 rounded-[6px] bg-white/[0.04] hover:bg-white/[0.1] text-white/50 hover:text-emerald-400 flex items-center justify-center transition-all cursor-pointer border-none"
                       >
                         <span className="material-symbols-rounded text-[16px]">add</span>
                       </button>
@@ -219,6 +286,25 @@ export default function MoneyPage() {
         }}
         initialSource={selectedSourceForAdjust}
       />
+
+      <EditMoneySourceModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedSourceForEdit(null);
+        }}
+        source={selectedSourceForEdit}
+      />
+
+      <RecordInterestModal
+        isOpen={isInterestModalOpen}
+        onClose={() => {
+          setIsInterestModalOpen(false);
+          setSelectedSourceForInterest(null);
+        }}
+        source={selectedSourceForInterest}
+      />
     </div>
   );
 }
+

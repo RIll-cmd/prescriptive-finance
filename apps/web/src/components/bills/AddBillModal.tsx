@@ -167,13 +167,22 @@ export const AddBillModal: React.FC = () => {
               </div>
               <select
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value === '__NEW__') {
+                    openAddCategoryModal();
+                  } else {
+                    setCategoryId(e.target.value);
+                  }
+                }}
                 className="w-full bg-[#0d0d21] border border-white/[0.08] rounded-[10px] px-3.5 py-2.5 text-[0.82rem] font-medium text-white outline-none focus:border-[#3869D2] transition-all"
               >
                 <option value="">No Category</option>
+                <option value="__NEW__" className="text-[#3869D2] font-bold bg-[#0f1a2e]">
+                  ➕ + Create New Category...
+                </option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
-                    {cat.name}
+                    {cat.name} ({cat.type})
                   </option>
                 ))}
               </select>
@@ -208,38 +217,46 @@ export const AddBillModal: React.FC = () => {
             <span>Recurring Bill (Advances upon payment)</span>
           </label>
 
-          {/* Color & Icon Pickers */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
+          {/* Color & Icon Pickers - Clean Stacked Layout */}
+          <div className="space-y-3 pt-1">
             <div>
-              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
+              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-2 block">
                 Theme Color
               </label>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex items-center gap-2.5 flex-wrap">
                 {COLOR_OPTIONS.map((c) => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setColorHex(c)}
                     style={{ backgroundColor: c }}
-                    className={`w-6 h-6 rounded-full transition-transform ${colorHex === c ? 'scale-125 ring-2 ring-white' : 'opacity-70 hover:opacity-100'}`}
+                    className={`w-6 h-6 rounded-full transition-all cursor-pointer ${
+                      colorHex === c
+                        ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0d0d21] scale-110 shadow-lg'
+                        : 'opacity-70 hover:opacity-100 hover:scale-105'
+                    }`}
                   />
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
+              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-2 block">
                 Icon
               </label>
-              <div className="flex gap-1.5 flex-wrap">
-                {ICON_OPTIONS.slice(0, 5).map((ic) => (
+              <div className="flex items-center gap-2 flex-wrap">
+                {ICON_OPTIONS.map((ic) => (
                   <button
                     key={ic}
                     type="button"
                     onClick={() => setIcon(ic)}
-                    className={`w-7 h-7 rounded-[6px] flex items-center justify-center text-[16px] transition-all ${icon === ic ? 'bg-white/20 text-white' : 'text-white/40 hover:bg-white/[0.06]'}`}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                      icon === ic
+                        ? 'bg-gradient-to-br from-[#3869D2] to-[#5a8aee] text-white shadow-md scale-105 border border-white/20'
+                        : 'bg-white/[0.04] text-white/50 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white'
+                    }`}
                   >
-                    <span className="material-symbols-rounded text-[16px]">{ic}</span>
+                    <span className="material-symbols-rounded text-[18px]">{ic}</span>
                   </button>
                 ))}
               </div>

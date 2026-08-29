@@ -73,3 +73,54 @@ class UserService:
         await db.commit()
         await db.refresh(user)
         return user
+
+    @staticmethod
+    async def get_tutorial_progress(db: AsyncSession, user_id: str) -> dict[str, bool]:
+        """Returns the dictionary of completed tutorial keys for the user."""
+        user = await UserService.get_by_id(db, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        
+        import json
+        try:
+            progress = json.loads(user.tutorial_progress or "{}")
+            if not isinstance(progress, dict):
+                progress = {}
+        except Exception:
+            progress = {}
+        return progress
+
+    @staticmethod
+    async def mark_tutorial_completed(db: AsyncSession, user_id: str, page: str) -> dict[str, bool]:
+        """Marks a page's tutorial as completed/seen and persists to database."""
+        user = await UserService.get_by_id(db, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        
+        import json
+        try:
+            progress = json.loads(user.tutorial_progress or "{}")
+            if not isinstance(progress, dict):
+                progress = {}
+        except Exception:
+            progress = {}
+        
+        normalized_page = page.strip().lower()
+        progress[normalized_page] = True
+        user.tutorial_progress = json.dumps(progress)
+        
+        await db.commit()
+        await db.refresh(user)
+        return progress
+
+    @staticmethod
+    async def reset_tutorial_progress(db: AsyncSession, user_id: str) -> dict[str, bool]:
+        """Resets all tutorial progress back to empty dict."""
+        user = await UserService.get_by_id(db, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        
+        user.tutorial_progress = "{}"
+        await db.commit()
+        await db.refresh(user)
+        return {}

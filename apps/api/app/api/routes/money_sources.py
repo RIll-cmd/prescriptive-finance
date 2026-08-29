@@ -52,6 +52,27 @@ async def update_money_source(
     source = await MoneySourceService.update_source(db, current_user.id, source_id, req)
     return MoneySourceResponse.model_validate(source)
 
+@router.post("/{source_id}/set-default", response_model=MoneySourceResponse)
+async def set_default_money_source(
+    source_id: str,
+    current_user: UserModel = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Designates a money source as the user's primary/default wallet."""
+    source = await MoneySourceService.set_default_source(db, current_user.id, source_id)
+    return MoneySourceResponse.model_validate(source)
+
+@router.post("/{source_id}/credit-interest", response_model=MoneySourceResponse)
+async def credit_interest(
+    source_id: str,
+    req: CreditInterestRequest,
+    current_user: UserModel = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Manually credits interest earnings directly to the money source."""
+    source = await MoneySourceService.credit_manual_interest(db, current_user.id, source_id, req)
+    return MoneySourceResponse.model_validate(source)
+
 @router.delete("/{source_id}", response_model=MessageResponse)
 async def delete_money_source(
     source_id: str,

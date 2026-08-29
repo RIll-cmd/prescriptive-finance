@@ -37,5 +37,16 @@ class UserResponse(BaseModel):
     timezone: str
     is_active: bool
     is_onboarded: bool
+    tutorial_progress: Optional[str] = "{}"
     created_at: datetime
     last_login_at: Optional[datetime] = None
+
+class TutorialProgressResponse(BaseModel):
+    progress: dict[str, bool]
+
+class TutorialCompleteRequest(BaseModel):
+    page: str = Field(..., min_length=1, max_length=50)
+
+class TutorialResetResponse(BaseModel):
+    message: str
+    progress: dict[str, bool]

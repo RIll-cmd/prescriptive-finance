@@ -16,7 +16,15 @@ class MoneySourceModel(Base):
     color_hex = Column(String(20), default="#3869D2", nullable=False)
     icon = Column(String(50), default="account_balance_wallet", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    is_default = Column(Boolean, default=False, nullable=False)
     
+    # Auto & Manual Interest Crediting Engine
+    auto_credit_interest = Column(Boolean, default=False, nullable=False)
+    interest_rate_pct = Column(Numeric(6, 4), default=0.0000, nullable=True)  # e.g., 3.5000 for 3.50%
+    interest_frequency = Column(String(20), default="DAILY", nullable=True)   # DAILY or MONTHLY
+    withholding_tax_pct = Column(Numeric(5, 2), default=20.00, nullable=True) # Default 20.00%
+    last_interest_credited_at = Column(DateTime(timezone=True), nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 

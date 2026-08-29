@@ -17,6 +17,7 @@ class UserModel(Base):
     timezone = Column(String(50), default="Asia/Manila", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     is_onboarded = Column(Boolean, default=False, nullable=False)
+    tutorial_progress = Column(String(1000), default="{}", nullable=False)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

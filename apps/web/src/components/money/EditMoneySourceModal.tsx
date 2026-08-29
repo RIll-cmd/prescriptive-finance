@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
-import { MoneySourceType } from '@financial-os/shared-types';
+import { MoneySource, MoneySourceType } from '@financial-os/shared-types';
 import { DEFAULT_BANK_PRESETS } from '@/utils/interest-engine';
 
-interface AddMoneySourceModalProps {
-  isOpen?: boolean;
-  onClose?: () => void;
+interface EditMoneySourceModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  source: MoneySource | null;
 }
 
 const PRESET_ICONS = [
@@ -28,22 +31,19 @@ const PRESET_COLORS = [
   '#06B6D4', // Cyan (GoTyme)
 ];
 
-export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
-  isOpen: propsIsOpen,
-  onClose: propsOnClose,
+export const EditMoneySourceModal: React.FC<EditMoneySourceModalProps> = ({
+  isOpen,
+  onClose,
+  source,
 }) => {
-  const { addMoneySource, user, isAddSourceModalOpen, closeAddSourceModal } = useAuthStore();
-
-  const isOpen = propsIsOpen !== undefined ? propsIsOpen : isAddSourceModalOpen;
-  const handleClose = propsOnClose || closeAddSourceModal;
+  const { updateMoneySource, deleteMoneySource } = useAuthStore();
 
   const [name, setName] = useState('');
   const [type, setType] = useState<MoneySourceType>('BANK');
-  const [initialBalance, setInitialBalance] = useState('');
   const [colorHex, setColorHex] = useState(PRESET_COLORS[0]);
   const [icon, setIcon] = useState(PRESET_ICONS[1].name);
-  
-  // Interest & Yield settings
+
+  // Interest Settings
   const [autoCreditInterest, setAutoCreditInterest] = useState(false);
   const [interestRatePct, setInterestRatePct] = useState('3.50');
   const [interestFrequency, setInterestFrequency] = useState<'DAILY' | 'MONTHLY'>('DAILY');
@@ -51,11 +51,24 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
   const [selectedBankPresetId, setSelectedBankPresetId] = useState('uno_ready');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (source && isOpen) {
+      setName(source.name);
+      setType(source.type);
+      setColorHex(source.color_hex || PRESET_COLORS[0]);
+      setIcon(source.icon || PRESET_ICONS[1].name);
+      setAutoCreditInterest(Boolean(source.auto_credit_interest));
+      setInterestRatePct(String(source.interest_rate_pct || '3.50'));
+      setInterestFrequency((source.interest_frequency as any) || 'DAILY');
+      setWithholdingTaxPct(String(source.withholding_tax_pct || '20'));
+      setErrorMsg(null);
+    }
+  }, [source, isOpen]);
 
-  const currencySymbol = user?.currency === 'PHP' ? '₱' : '$';
+  if (!isOpen || !source) return null;
 
   const handleBankPresetChange = (presetId: string) => {
     setSelectedBankPresetId(presetId);
@@ -74,21 +87,13 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
       return;
     }
 
-    const initBal = parseFloat(initialBalance) || 0;
-    if (initBal < 0) {
-      setErrorMsg('Initial balance cannot be negative.');
-      return;
-    }
-
     setIsSubmitting(true);
     setErrorMsg(null);
 
     try {
-      await addMoneySource({
+      await updateMoneySource(source.id, {
         name: name.trim(),
         type,
-        currency: user?.currency || 'PHP',
-        initial_balance: initBal,
         color_hex: colorHex,
         icon,
         auto_credit_interest: autoCreditInterest,
@@ -96,14 +101,24 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
         interest_frequency: interestFrequency,
         withholding_tax_pct: parseFloat(withholdingTaxPct) || 20,
       });
-      setName('');
-      setInitialBalance('');
-      setAutoCreditInterest(false);
-      handleClose();
+      onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to add money source.');
+      setErrorMsg(err.message || 'Failed to update money source.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete "${source.name}"?`)) return;
+    setIsDeleting(true);
+    try {
+      await deleteMoneySource(source.id);
+      onClose();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to delete money source.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -113,17 +128,20 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between mb-5 pb-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#3869D2] to-[#C57CF9] flex items-center justify-center shadow-[0_2px_12px_rgba(56,105,210,0.3)]">
-              <span className="material-symbols-rounded text-[18px] text-white">account_balance_wallet</span>
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm"
+              style={{ backgroundColor: `${colorHex}33`, color: colorHex }}
+            >
+              <span className="material-symbols-rounded text-[18px]">{icon}</span>
             </div>
             <div>
-              <h2 className="text-[1.15rem] font-bold tracking-tight">Add Money Source</h2>
-              <p className="text-[0.72rem] text-white/40">Bank account, e-wallet, cash stash, or high-yield savings</p>
+              <h2 className="text-[1.15rem] font-bold tracking-tight">Account Settings</h2>
+              <p className="text-[0.72rem] text-white/40">Edit settings and interest rules for {source.name}</p>
             </div>
           </div>
           <button
             type="button"
-            onClick={handleClose}
+            onClick={onClose}
             aria-label="Close modal"
             className="w-8 h-8 rounded-full bg-white/[0.04] hover:bg-white/[0.1] text-white/50 hover:text-white flex items-center justify-center transition-all cursor-pointer border-none"
           >
@@ -142,55 +160,33 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
           {/* Account Name */}
           <div>
             <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
-              Account / Source Name *
+              Account Name *
             </label>
             <input
               type="text"
-              placeholder="e.g. UNO Digital Bank, Maya Savings, Cash on Hand"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              autoFocus
               className="w-full bg-white/[0.04] border border-white/[0.08] rounded-[10px] px-3.5 py-2.5 text-[0.85rem] font-medium text-white outline-none focus:border-[#3869D2] transition-all"
             />
           </div>
 
-          {/* Account Type & Initial Balance Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
-                Type
-              </label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value as MoneySourceType)}
-                className="w-full bg-[#0d0d21] border border-white/[0.08] rounded-[10px] px-3.5 py-2.5 text-[0.82rem] font-medium text-white outline-none focus:border-[#3869D2] transition-all"
-              >
-                <option value="BANK" className="bg-[#0f0f24]">Bank Account</option>
-                <option value="E_WALLET" className="bg-[#0f0f24]">E-Wallet (GCash/Maya)</option>
-                <option value="CASH" className="bg-[#0f0f24]">Physical Cash</option>
-                <option value="CREDIT_CARD" className="bg-[#0f0f24]">Credit Card</option>
-                <option value="OTHER" className="bg-[#0f0f24]">Other Asset / Stash</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
-                Starting Balance
-              </label>
-              <div className="relative flex items-center bg-white/[0.04] border border-white/[0.08] rounded-[10px] px-3 py-2 focus-within:border-[#3869D2] transition-all">
-                <span className="text-[0.85rem] font-medium text-white/40 mr-1.5">{currencySymbol}</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={initialBalance}
-                  onChange={(e) => setInitialBalance(e.target.value)}
-                  className="bg-transparent border-none text-[0.85rem] font-bold text-white outline-none w-full tabular-nums"
-                />
-              </div>
-            </div>
+          {/* Account Type */}
+          <div>
+            <label className="text-[0.68rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1.5 block">
+              Type
+            </label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as MoneySourceType)}
+              className="w-full bg-[#0d0d21] border border-white/[0.08] rounded-[10px] px-3.5 py-2.5 text-[0.82rem] font-medium text-white outline-none focus:border-[#3869D2] transition-all"
+            >
+              <option value="BANK" className="bg-[#0f0f24]">Bank Account</option>
+              <option value="E_WALLET" className="bg-[#0f0f24]">E-Wallet (GCash/Maya)</option>
+              <option value="CASH" className="bg-[#0f0f24]">Physical Cash</option>
+              <option value="CREDIT_CARD" className="bg-[#0f0f24]">Credit Card</option>
+              <option value="OTHER" className="bg-[#0f0f24]">Other Asset / Stash</option>
+            </select>
           </div>
 
           {/* ─── Interest & Yield Settings Section ─── */}
@@ -201,7 +197,7 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
                 <div>
                   <div className="text-[0.82rem] font-bold text-white">Auto-Credit Earned Interest</div>
                   <div className="text-[0.68rem] text-white/40">
-                    Automatically add daily or monthly yield to this balance
+                    Automatically credit daily/monthly interest to this account
                   </div>
                 </div>
               </div>
@@ -229,7 +225,7 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
                 {/* Bank Presets Selector */}
                 <div>
                   <label className="text-[0.65rem] font-semibold text-white/40 uppercase tracking-[0.06em] mb-1 block">
-                    Digital Bank Preset
+                    Preset Template
                   </label>
                   <select
                     value={selectedBankPresetId}
@@ -292,7 +288,7 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
               </div>
             ) : (
               <div className="text-[0.70rem] text-white/40 italic">
-                Manual Mode: Interest is not auto-added. You can manually post earned interest to this account anytime with 1 click.
+                Manual Mode: Auto-crediting is OFF. You can manually post earned interest to this account anytime using the &quot;Credit Interest&quot; button.
               </div>
             )}
           </div>
@@ -342,22 +338,34 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/[0.06] mt-5">
+          <div className="flex items-center justify-between pt-4 border-t border-white/[0.06] mt-5">
             <button
               type="button"
-              onClick={handleClose}
-              className="px-4 py-2.5 rounded-[10px] text-[0.82rem] font-medium text-white/60 hover:text-white hover:bg-white/[0.04] transition-all"
+              onClick={handleDelete}
+              disabled={isDeleting || isSubmitting}
+              className="text-[0.78rem] font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-3 py-2 rounded-lg transition-all border-none bg-transparent cursor-pointer flex items-center gap-1"
             >
-              Cancel
+              <span className="material-symbols-rounded text-[16px]">delete</span>
+              <span>{isDeleting ? 'Deleting...' : 'Delete Account'}</span>
             </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="group relative flex items-center justify-center gap-2 bg-gradient-to-br from-[#3869D2] to-[#C57CF9] border-none rounded-[10px] px-6 py-2.5 text-white font-bold text-[0.85rem] cursor-pointer shadow-[0_4px_20px_rgba(56,105,210,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
-            >
-              <span>{isSubmitting ? 'Creating...' : 'Create Source'}</span>
-              <span className="material-symbols-rounded text-[18px]">check</span>
-            </button>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-[10px] text-[0.82rem] font-medium text-white/60 hover:text-white hover:bg-white/[0.04] transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="group relative flex items-center justify-center gap-2 bg-gradient-to-br from-[#3869D2] to-[#C57CF9] border-none rounded-[10px] px-5 py-2 text-white font-bold text-[0.85rem] cursor-pointer shadow-[0_4px_20px_rgba(56,105,210,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                <span>{isSubmitting ? 'Saving...' : 'Save Changes'}</span>
+                <span className="material-symbols-rounded text-[18px]">check</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -365,4 +373,4 @@ export const AddMoneySourceModal: React.FC<AddMoneySourceModalProps> = ({
   );
 };
 
-export default AddMoneySourceModal;
+export default EditMoneySourceModal;

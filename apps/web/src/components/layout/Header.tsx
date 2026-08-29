@@ -2,9 +2,11 @@
 
 import React from 'react';
 import { useAuthStore } from '@/stores/auth-store';
+import { useDashboardStore } from '@/stores/dashboard-store';
 
 export const Header: React.FC = () => {
   const { user } = useAuthStore();
+  const { openCustomizeModal } = useDashboardStore();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -42,6 +44,16 @@ export const Header: React.FC = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#3869D2] to-[#C57CF9] opacity-0 group-focus-within:opacity-[0.06] blur-[20px] pointer-events-none transition-opacity duration-300" />
         </div>
+
+        {/* Customize Dashboard Modal Button */}
+        <button
+          onClick={openCustomizeModal}
+          title="Customize Dashboard Layout"
+          aria-label="Customize Dashboard Layout"
+          className="w-10 h-10 rounded-[12px] bg-white/[0.04] border border-white/[0.08] text-white/50 flex items-center justify-center cursor-pointer hover:bg-[rgba(197,124,249,0.12)] hover:border-[#C57CF9]/30 hover:text-[#d9a4ff] hover:scale-105 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        >
+          <span className="material-symbols-rounded text-[20px]">tune</span>
+        </button>
 
         {/* Notifications */}
         <button

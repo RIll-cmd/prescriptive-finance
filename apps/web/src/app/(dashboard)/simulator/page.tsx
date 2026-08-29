@@ -20,8 +20,13 @@ import { ForecastSummaryWidget } from '@/components/forecasting/ForecastSummaryW
 import { ForecastTrajectoryChart } from '@/components/forecasting/ForecastTrajectoryChart';
 import { ShortageRiskBanner } from '@/components/forecasting/ShortageRiskBanner';
 import { CategoryForecastBreakdown } from '@/components/forecasting/CategoryForecastBreakdown';
+import { InterestPredictorView } from '@/components/simulator/InterestPredictorView';
+import { useContextualTutorial } from '@/hooks/useContextualTutorial';
 
 export default function SimulatorPage() {
+  // Contextual Onboarding for Simulator
+  useContextualTutorial('simulator', 600);
+
   const {
     activeTab,
     setActiveTab,
@@ -38,6 +43,7 @@ export default function SimulatorPage() {
 
   const tabs = [
     { id: 'SIMULATE' as const, label: 'What-If Sandbox', icon: 'science' },
+    { id: 'INTEREST' as const, label: 'Interest & Tax Predictor', icon: 'calculate' },
     { id: 'COMPARE' as const, label: 'Scenario Comparison', icon: 'compare_arrows' },
     { id: 'FORECAST' as const, label: 'Forecast Projections', icon: 'trending_up' },
     { id: 'SAVED' as const, label: 'Saved Scenarios', icon: 'bookmarks' },
@@ -63,7 +69,7 @@ export default function SimulatorPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-1.5 p-1 rounded-[14px] bg-white/[0.04] border border-white/[0.08] backdrop-blur-md overflow-x-auto">
+        <div data-tour="simulator-tabs" className="flex items-center gap-1.5 p-1 rounded-[14px] bg-white/[0.04] border border-white/[0.08] backdrop-blur-md overflow-x-auto">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -88,23 +94,25 @@ export default function SimulatorPage() {
       {/* TAB 1: WHAT-IF SANDBOX */}
       {activeTab === 'SIMULATE' && (
         <div className="space-y-6">
-          {/* Preset Selector */}
-          <ScenarioTypeSelector
-            activeType={activeScenarioType}
-            onSelect={setActiveScenarioType}
-          />
+          {/* Preset Selector & Active Form */}
+          <div data-tour="simulator-forms" className="space-y-6">
+            <ScenarioTypeSelector
+              activeType={activeScenarioType}
+              onSelect={setActiveScenarioType}
+            />
 
-          {/* Active Scenario Form */}
-          {activeScenarioType === 'PURCHASE' && <PurchaseScenarioForm />}
-          {activeScenarioType === 'INCOME_CHANGE' && <IncomeScenarioForm />}
-          {activeScenarioType === 'EXPENSE_CHANGE' && <ExpenseScenarioForm />}
-          {activeScenarioType === 'SAVINGS_CHANGE' && <SavingsScenarioForm />}
-          {activeScenarioType === 'DEBT' && <DebtScenarioForm />}
-          {activeScenarioType === 'CUSTOM' && <CustomScenarioForm />}
+            {/* Active Scenario Form */}
+            {activeScenarioType === 'PURCHASE' && <PurchaseScenarioForm />}
+            {activeScenarioType === 'INCOME_CHANGE' && <IncomeScenarioForm />}
+            {activeScenarioType === 'EXPENSE_CHANGE' && <ExpenseScenarioForm />}
+            {activeScenarioType === 'SAVINGS_CHANGE' && <SavingsScenarioForm />}
+            {activeScenarioType === 'DEBT' && <DebtScenarioForm />}
+            {activeScenarioType === 'CUSTOM' && <CustomScenarioForm />}
+          </div>
 
           {/* Simulation Output Area */}
           {currentSimulation && (
-            <div className="space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div data-tour="simulator-impact" className="space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-center gap-2 pb-2">
                 <span className="material-symbols-rounded text-[20px] text-[#C57CF9]">
                   auto_awesome
@@ -135,7 +143,10 @@ export default function SimulatorPage() {
         </div>
       )}
 
-      {/* TAB 2: SCENARIO COMPARISON */}
+      {/* TAB 2: INTEREST & TAX PREDICTOR */}
+      {activeTab === 'INTEREST' && <InterestPredictorView />}
+
+      {/* TAB 3: SCENARIO COMPARISON */}
       {activeTab === 'COMPARE' && <ScenarioComparisonTable />}
 
       {/* TAB 3: FORECAST PROJECTIONS */}
