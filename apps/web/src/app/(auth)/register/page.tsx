@@ -250,7 +250,7 @@ const ParticleBackground: React.FC = () => {
   );
 };
 
-/* ─── Animated Controlled Input Field ─── */
+/* ─── Animated Controlled Input Field with Visibility Toggle ─── */
 const FloatingInput: React.FC<{
   id: string;
   label: string;
@@ -262,6 +262,9 @@ const FloatingInput: React.FC<{
   placeholder?: string;
 }> = ({ id, label, type = 'text', icon, value, onChange, required = false, placeholder }) => {
   const [focused, setFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === 'password';
+  const effectiveType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
     <div className="relative group">
@@ -276,7 +279,7 @@ const FloatingInput: React.FC<{
       >
         <span
           className={`
-            material-symbols-rounded text-[20px] transition-colors duration-300 select-none
+            material-symbols-rounded text-[20px] transition-colors duration-300 select-none shrink-0
             ${focused ? 'text-[#C57CF9]' : 'text-white/30 group-hover:text-white/50'}
           `}
         >
@@ -294,7 +297,7 @@ const FloatingInput: React.FC<{
           </label>
           <input
             id={id}
-            type={type}
+            type={effectiveType}
             value={value}
             required={required}
             placeholder={placeholder}
@@ -302,9 +305,26 @@ const FloatingInput: React.FC<{
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             className="w-full bg-transparent border-none outline-none text-white text-[0.88rem] font-medium pt-0.5 placeholder:text-white/20"
-            autoComplete={type === 'password' ? 'new-password' : type === 'email' ? 'email' : 'username'}
+            autoComplete={isPassword ? 'new-password' : type === 'email' ? 'email' : 'username'}
           />
         </div>
+
+        {/* Eye icon toggle for password visibility */}
+        {isPassword && (
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setShowPassword((prev) => !prev)}
+            title={showPassword ? 'Hide password' : 'Show password'}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            className="p-1.5 rounded-lg text-white/50 hover:text-[#C57CF9] hover:bg-white/[0.06] transition-all duration-200 flex items-center justify-center cursor-pointer select-none shrink-0"
+          >
+            <span className="material-symbols-rounded text-[20px]">
+              {showPassword ? 'visibility_off' : 'visibility'}
+            </span>
+          </button>
+        )}
+
         <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r from-[#3869D2]/[0.04] to-[#C57CF9]/[0.04] blur-xl pointer-events-none transition-opacity duration-500 ${focused ? 'opacity-100' : 'opacity-0'}`} />
       </div>
     </div>
@@ -367,7 +387,17 @@ export default function RegisterPage() {
       });
       router.push('/dashboard');
     } catch (err: any) {
-      setLocalError(err?.message || 'Failed to create account.');
+      const msg = err?.message || 'Failed to create account.';
+      if (
+        msg.toLowerCase().includes('username') &&
+        (msg.toLowerCase().includes('already') ||
+          msg.toLowerCase().includes('exist') ||
+          msg.toLowerCase().includes('taken'))
+      ) {
+        setLocalError(`The username "${cleanUsername}" is already taken. Please choose another username.`);
+      } else {
+        setLocalError(msg);
+      }
     } finally {
       setIsSubmitting(false);
     }

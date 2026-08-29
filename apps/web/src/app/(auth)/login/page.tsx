@@ -255,7 +255,7 @@ const ParticleBackground: React.FC = () => {
   );
 };
 
-/* ─── Animated Controlled Input Field ─── */
+/* ─── Animated Controlled Input Field with Visibility Toggle ─── */
 const FloatingInput: React.FC<{
   id: string;
   label: string;
@@ -266,6 +266,9 @@ const FloatingInput: React.FC<{
   required?: boolean;
 }> = ({ id, label, type = 'text', icon, value, onChange, required = false }) => {
   const [focused, setFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === 'password';
+  const effectiveType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
     <div className="relative group">
@@ -300,17 +303,34 @@ const FloatingInput: React.FC<{
           </label>
           <input
             id={id}
-            type={type}
+            type={effectiveType}
             value={value}
             required={required}
             onChange={(e) => onChange(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             className="w-full bg-transparent border-none outline-none text-white text-[0.88rem] font-medium pt-1"
-            autoComplete={type === 'password' ? 'current-password' : 'email'}
+            autoComplete={isPassword ? 'current-password' : 'email'}
           />
         </div>
-        <div className={`absolute inset-0 rounded-2xl bg-gradient-r from-[#3869D2]/[0.04] to-[#C57CF9]/[0.04] blur-xl pointer-events-none transition-opacity duration-500 ${focused ? 'opacity-100' : 'opacity-0'}`} />
+
+        {/* Eye icon toggle for password visibility */}
+        {isPassword && (
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setShowPassword((prev) => !prev)}
+            title={showPassword ? 'Hide password' : 'Show password'}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            className="p-1.5 rounded-lg text-white/50 hover:text-[#C57CF9] hover:bg-white/[0.06] transition-all duration-200 flex items-center justify-center cursor-pointer select-none shrink-0"
+          >
+            <span className="material-symbols-rounded text-[20px]">
+              {showPassword ? 'visibility_off' : 'visibility'}
+            </span>
+          </button>
+        )}
+
+        <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r from-[#3869D2]/[0.04] to-[#C57CF9]/[0.04] blur-xl pointer-events-none transition-opacity duration-500 ${focused ? 'opacity-100' : 'opacity-0'}`} />
       </div>
     </div>
   );

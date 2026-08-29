@@ -46,8 +46,8 @@ export const BalanceCard: React.FC = () => {
 
   return (
     <>
-      <section className="glass-card balance-card">
-        <div className="card-inner">
+      <section className="glass-card balance-card h-full flex flex-col">
+        <div className="card-inner h-full flex-1 flex flex-col justify-between">
           {/* Header */}
           <div className="flex items-center justify-between mb-[18px]">
             <h2 className="text-[0.95rem] font-semibold text-white/70 tracking-[-0.01em]">

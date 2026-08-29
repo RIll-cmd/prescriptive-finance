@@ -105,7 +105,7 @@ class MoneySourceService:
         res = await db.execute(query)
         items = list(res.scalars().all())
         
-        # Self-healing auto-seed if user has no sources yet
+        # Self-healing auto-seed with 0.00 balance if user has no sources yet
         if not items:
             default_sources = [
                 MoneySourceModel(
@@ -114,8 +114,8 @@ class MoneySourceService:
                     name="Main Bank Account",
                     type="BANK",
                     currency="PHP",
-                    initial_balance=Decimal("15000.00"),
-                    current_balance=Decimal("15000.00"),
+                    initial_balance=Decimal("0.00"),
+                    current_balance=Decimal("0.00"),
                     color_hex="#3869D2",
                     icon="account_balance",
                     is_active=True,
@@ -127,8 +127,8 @@ class MoneySourceService:
                     name="Cash on Hand",
                     type="CASH",
                     currency="PHP",
-                    initial_balance=Decimal("2500.00"),
-                    current_balance=Decimal("2500.00"),
+                    initial_balance=Decimal("0.00"),
+                    current_balance=Decimal("0.00"),
                     color_hex="#34d399",
                     icon="payments",
                     is_active=True,
@@ -140,8 +140,8 @@ class MoneySourceService:
                     name="GCash / E-Wallet",
                     type="E_WALLET",
                     currency="PHP",
-                    initial_balance=Decimal("5000.00"),
-                    current_balance=Decimal("5000.00"),
+                    initial_balance=Decimal("0.00"),
+                    current_balance=Decimal("0.00"),
                     color_hex="#06B6D4",
                     icon="smartphone",
                     is_active=True,

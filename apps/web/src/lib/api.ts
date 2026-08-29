@@ -33,12 +33,17 @@ export async function apiClient<T>(endpoint: string, options: RequestInit = {}):
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+
   try {
     const res = await fetch(url, {
       ...options,
+      signal: options.signal || controller.signal,
       credentials: 'include', // Automatically passes HttpOnly cookies
       headers,
     });
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       let errorMessage = `Request failed with status ${res.status}`;

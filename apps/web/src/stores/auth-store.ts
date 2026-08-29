@@ -12,6 +12,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   moneySources: MoneySource[];
   totalBalance: number;
   error: string | null;
@@ -41,6 +42,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
   moneySources: [],
   totalBalance: 0,
   error: null,
@@ -58,13 +60,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (typeof window !== 'undefined' && res.access_token) {
         localStorage.setItem('financial_os_token', res.access_token);
       }
-      set({ user: res.user, isAuthenticated: true, isLoading: false, error: null });
+      set({ user: res.user, isAuthenticated: true, isInitialized: true, isLoading: false, error: null });
       // Fetch money sources in background
       get().fetchMoneySources();
       return res.user;
     } catch (err: any) {
       const msg = err.message || 'Failed to sign in. Please check your credentials.';
-      set({ error: msg, isLoading: false, isAuthenticated: false, user: null });
+      set({ error: msg, isLoading: false, isAuthenticated: false, isInitialized: true, user: null });
       throw err;
     }
   },
@@ -76,11 +78,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (typeof window !== 'undefined' && res.access_token) {
         localStorage.setItem('financial_os_token', res.access_token);
       }
-      set({ user: res.user, isAuthenticated: true, isLoading: false, error: null });
+      set({ user: res.user, isAuthenticated: true, isInitialized: true, isLoading: false, error: null });
       return res.user;
     } catch (err: any) {
       const msg = err.message || 'Failed to create account.';
-      set({ error: msg, isLoading: false, isAuthenticated: false, user: null });
+      set({ error: msg, isLoading: false, isAuthenticated: false, isInitialized: true, user: null });
       throw err;
     }
   },
@@ -99,6 +101,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: null,
         isAuthenticated: false,
         isLoading: false,
+        isInitialized: true,
         moneySources: [],
         totalBalance: 0,
         error: null,
@@ -107,16 +110,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   checkAuth: async () => {
+    let token: string | null = null;
+    if (typeof window !== 'undefined') {
+      token =
+        localStorage.getItem('financial_os_token') ||
+        localStorage.getItem('access_token') ||
+        localStorage.getItem('auth_token');
+    }
+
+    if (!token) {
+      set({ user: null, isAuthenticated: false, isInitialized: true, isLoading: false });
+      return;
+    }
+
+    set({ isLoading: true });
     try {
       const user = await authApi.getMe();
-      set({ user, isAuthenticated: true, isLoading: false });
+      set({ user, isAuthenticated: true, isInitialized: true, isLoading: false });
       await get().fetchMoneySources();
     } catch {
       // Not authenticated or session expired
       if (typeof window !== 'undefined') {
         localStorage.removeItem('financial_os_token');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('auth_token');
       }
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false, isInitialized: true, isLoading: false });
     }
   },
 
@@ -207,17 +226,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   completeOnboarding: async (name: string, currency: string, initialSources: CreateMoneySourcePayload[]) => {
     set({ isLoading: true });
     try {
-      // 1. Create selected starting money sources
-      for (const src of initialSources) {
-        if (src.name && src.name.trim()) {
-          try {
-            await moneySourcesApi.create(src);
-          } catch {
-            // continue with next
+      // 1. Fetch current placeholder sources and remove them if user is setting up fresh custom ones
+      if (initialSources.length > 0) {
+        try {
+          const currentRes = await moneySourcesApi.list();
+          const existing = currentRes.items || [];
+          for (const old of existing) {
+            try {
+              await moneySourcesApi.delete(old.id);
+            } catch {
+              // ignore
+            }
+          }
+        } catch {
+          // ignore
+        }
+
+        // 2. Create selected starting money sources with customized balances
+        for (const src of initialSources) {
+          if (src.name && src.name.trim()) {
+            try {
+              await moneySourcesApi.create(src);
+            } catch {
+              // continue with next
+            }
           }
         }
       }
-      // 2. Update user profile to mark onboarded
+
+      // 3. Update user profile to mark onboarded
       const updatedUser = await authApi.updateProfile({
         first_name: name.trim() || undefined,
         currency,

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ParticleBackground } from '@/components/ui/ParticleBackground';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -26,7 +27,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, checkAuth } = useAuthStore();
+  const router = useRouter();
+  const { user, isAuthenticated, isInitialized, checkAuth } = useAuthStore();
   const { fetchProgress } = useTutorialStore();
 
   useEffect(() => {
@@ -34,10 +36,31 @@ export default function DashboardLayout({
   }, [checkAuth]);
 
   useEffect(() => {
+    if (isInitialized && !isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isInitialized, isAuthenticated, router]);
+
+  useEffect(() => {
     if (user) {
       fetchProgress();
     }
   }, [user, fetchProgress]);
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-3 select-none">
+        <div className="w-9 h-9 rounded-full border-2 border-[#C57CF9]/20 border-t-[#C57CF9] animate-spin" />
+        <span className="text-[0.8rem] text-white/40 font-medium tracking-wide">
+          Verifying credentials...
+        </span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="relative min-h-screen bg-black text-white flex">

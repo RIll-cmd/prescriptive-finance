@@ -16,13 +16,13 @@ interface CustomSourceItem {
 }
 
 const PRESET_SOURCES = [
-  { name: 'Physical Cash', type: 'CASH' as const, icon: 'payments', color: '#10B981', defaultBalance: 2000 },
-  { name: 'GCash', type: 'E_WALLET' as const, icon: 'account_balance_wallet', color: '#007DFE', defaultBalance: 5000 },
-  { name: 'Maya', type: 'E_WALLET' as const, icon: 'wallet', color: '#22C55E', defaultBalance: 3000 },
-  { name: 'BPI Bank', type: 'BANK' as const, icon: 'account_balance', color: '#B91C1C', defaultBalance: 15000 },
-  { name: 'BDO Unibank', type: 'BANK' as const, icon: 'account_balance', color: '#1E40AF', defaultBalance: 10000 },
-  { name: 'GoTyme Bank', type: 'BANK' as const, icon: 'credit_card', color: '#06B6D4', defaultBalance: 5000 },
-  { name: 'UnionBank', type: 'BANK' as const, icon: 'account_balance', color: '#F97316', defaultBalance: 10000 },
+  { name: 'Physical Cash', type: 'CASH' as const, icon: 'payments', color: '#10B981', defaultBalance: 0 },
+  { name: 'GCash', type: 'E_WALLET' as const, icon: 'account_balance_wallet', color: '#007DFE', defaultBalance: 0 },
+  { name: 'Maya', type: 'E_WALLET' as const, icon: 'wallet', color: '#22C55E', defaultBalance: 0 },
+  { name: 'BPI Bank', type: 'BANK' as const, icon: 'account_balance', color: '#B91C1C', defaultBalance: 0 },
+  { name: 'BDO Unibank', type: 'BANK' as const, icon: 'account_balance', color: '#1E40AF', defaultBalance: 0 },
+  { name: 'GoTyme Bank', type: 'BANK' as const, icon: 'credit_card', color: '#06B6D4', defaultBalance: 0 },
+  { name: 'UnionBank', type: 'BANK' as const, icon: 'account_balance', color: '#F97316', defaultBalance: 0 },
 ];
 
 const PRESET_ICONS = [
@@ -54,13 +54,13 @@ export const OnboardingModal: React.FC = () => {
   const [name, setName] = useState(user?.first_name || '');
   const [currency, setCurrency] = useState('PHP');
   const [selectedSources, setSelectedSources] = useState<Record<string, { enabled: boolean; balance: number }>>({
-    'Physical Cash': { enabled: true, balance: 2000 },
-    GCash: { enabled: true, balance: 5000 },
-    Maya: { enabled: false, balance: 3000 },
-    'BPI Bank': { enabled: false, balance: 15000 },
-    'BDO Unibank': { enabled: false, balance: 10000 },
-    'GoTyme Bank': { enabled: false, balance: 5000 },
-    UnionBank: { enabled: false, balance: 10000 },
+    'Physical Cash': { enabled: true, balance: 0 },
+    GCash: { enabled: false, balance: 0 },
+    Maya: { enabled: false, balance: 0 },
+    'BPI Bank': { enabled: false, balance: 0 },
+    'BDO Unibank': { enabled: false, balance: 0 },
+    'GoTyme Bank': { enabled: false, balance: 0 },
+    UnionBank: { enabled: false, balance: 0 },
   });
 
   // Custom user-defined sources in onboarding

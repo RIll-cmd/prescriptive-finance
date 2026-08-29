@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Suppress browser native password reveal icons to use custom themed eye buttons */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+
 :root {
   --blue: #3869D2;
   --blue-light: #5a8aee;

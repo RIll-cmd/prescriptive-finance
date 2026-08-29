@@ -12,7 +12,7 @@ export const ActivityChart: React.FC = () => {
   const { user } = useAuthStore();
   const { toggleWidget } = useDashboardStore();
 
-  const [activeMonth, setActiveMonth] = useState<MonthlyActivityItem | null>(null);
+  const [hoveredMonth, setHoveredMonth] = useState<MonthlyActivityItem | null>(null);
   const [animated, setAnimated] = useState(false);
 
   useEffect(() => {
@@ -30,20 +30,11 @@ export const ActivityChart: React.FC = () => {
   }, 1000);
   const chartMax = Math.ceil(maxVal / 1000) * 1000 || 5000;
 
-  // Set default active month to current month
-  useEffect(() => {
-    if (months.length > 0 && !activeMonth) {
-      const curMonthNum = new Date().getMonth() + 1;
-      const cur = months.find((m) => m.month === curMonthNum) || months[0];
-      setActiveMonth(cur);
-    }
-  }, [months, activeMonth]);
-
   return (
-    <section className="glass-card activity-card">
-      <div className="card-inner">
+    <section className="glass-card activity-card h-full flex flex-col">
+      <div className="card-inner h-full flex-1 flex flex-col justify-between">
         {/* Header */}
-        <div className="flex items-center justify-between mb-[18px]">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-[0.95rem] font-semibold text-white/70 tracking-[-0.01em]">
             Cash Flow Activity
           </h2>
@@ -79,7 +70,7 @@ export const ActivityChart: React.FC = () => {
         </div>
 
         {/* Legend */}
-        <div className="flex gap-[18px] mb-4">
+        <div className="flex gap-[18px] mb-3">
           <span className="flex items-center gap-1.5 text-[0.72rem] font-medium text-white/50">
             <span className="w-2 h-2 rounded-full bg-[#C57CF9] shadow-[0_0_6px_rgba(197,124,249,0.4)]" />
             Income
@@ -90,8 +81,11 @@ export const ActivityChart: React.FC = () => {
           </span>
         </div>
 
-        {/* Chart Viewport */}
-        <div className="relative flex gap-2 h-[175px]">
+        {/* Chart Viewport with Mouse Leave handler - Expanded Height */}
+        <div
+          className="relative flex gap-2 flex-1 min-h-[235px]"
+          onMouseLeave={() => setHoveredMonth(null)}
+        >
           {/* Y Axis */}
           <div className="flex flex-col justify-between text-white/30 text-[0.62rem] font-medium tabular-nums pb-1 min-w-[32px] text-right">
             <span>{currencySymbol}{(chartMax / 1000).toFixed(0)}k</span>
@@ -116,7 +110,7 @@ export const ActivityChart: React.FC = () => {
                 <div
                   key={m.month}
                   className="group/bar relative flex gap-[2px] items-end flex-1 h-full cursor-pointer"
-                  onMouseEnter={() => setActiveMonth(m)}
+                  onMouseEnter={() => setHoveredMonth(m)}
                 >
                   {/* Income bar */}
                   <div
@@ -139,36 +133,36 @@ export const ActivityChart: React.FC = () => {
               );
             })}
 
-            {/* Hover Tooltip */}
-            {activeMonth && (
+            {/* Hover Tooltip - only visible when hovering over a month */}
+            {hoveredMonth && (
               <div className="absolute -top-1.5 right-4 bg-[#0a0a1a]/95 backdrop-blur-[16px] border border-white/[0.08] rounded-[8px] p-[10px_14px] text-[0.72rem] text-white/70 leading-[1.7] z-10 shadow-[0_4px_16px_rgba(0,0,0,0.5)] pointer-events-none animate-[ttSlide_0.2s_cubic-bezier(0.16,1,0.3,1)]">
                 <strong className="text-white text-[0.78rem] block mb-[3px]">
-                  {activeMonth.label}
+                  {hoveredMonth.label}
                 </strong>
                 <div>
                   Income:{' '}
                   <span className="text-[#d9a4ff] font-semibold tabular-nums">
                     {currencySymbol}
-                    {Number(activeMonth.income).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    {Number(hoveredMonth.income).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div>
                   Expenses:{' '}
                   <span className="text-[#5a8aee] font-semibold tabular-nums">
                     {currencySymbol}
-                    {Number(activeMonth.expense).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    {Number(hoveredMonth.expense).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="border-t border-white/[0.06] pt-1 mt-1 text-white/50">
                   Net Flow:{' '}
                   <span
                     className={`font-semibold tabular-nums ${
-                      Number(activeMonth.net) >= 0 ? 'text-emerald-400' : 'text-red-400'
+                      Number(hoveredMonth.net) >= 0 ? 'text-emerald-400' : 'text-red-400'
                     }`}
                   >
-                    {Number(activeMonth.net) >= 0 ? '+' : ''}
+                    {Number(hoveredMonth.net) >= 0 ? '+' : ''}
                     {currencySymbol}
-                    {Number(activeMonth.net).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    {Number(hoveredMonth.net).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
@@ -182,7 +176,7 @@ export const ActivityChart: React.FC = () => {
             <span
               key={m.month}
               className={`flex-1 text-center text-[0.62rem] font-semibold uppercase tracking-[0.03em] ${
-                activeMonth?.month === m.month ? 'text-[#C57CF9]' : 'text-white/30'
+                hoveredMonth?.month === m.month ? 'text-[#C57CF9]' : 'text-white/30'
               }`}
             >
               {m.key}
