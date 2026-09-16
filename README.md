@@ -1,6 +1,6 @@
-# Financial OS
+# Financial OS (in development)
 
-> Next-generation autonomous financial intelligence and personal financial operating system.
+> financial intelligence and personal financial operating system.
 
 ## Architecture Overview
 
